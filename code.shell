@@ -1,1 +1,20 @@
+#!/bin/bash
+# myScript.sh
+
+# --- Début de la mesure du temps ---
+START_TIME=$(date +%s)
+
+# Fichier de données 
+DATA_FILE="data_distribution.csv" 
+# Nom de l'exécutable C
+C_EXECUTABLE="./wildwater_app"
+# Fonction pour afficher la durée et quitter avec un code d'erreur
+exit_with_time() {
+    END_TIME=$(date +%s)
+    DURATION=$((END_TIME - START_TIME))
+    echo ""
+    echo "Durée totale du script : ${DURATION} secondes."
+    exit $1
+}
+
 
