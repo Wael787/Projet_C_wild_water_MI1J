@@ -57,7 +57,7 @@ if [ $action = "histo" ]; then
         retour=$?
 
         if [ $retour -ne 0 ]; then
-                echo "Erreur : echec du traitement histgramme."
+                echo "Erreur : echec du traitement histogramme."
                 exit 1
         fi
 
