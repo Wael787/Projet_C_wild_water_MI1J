@@ -24,6 +24,9 @@ if [ ! -f $datafile ]; then
         exit 1
 fi;
 
+#filtre des données pour prendre que les lignes source=>usine
+cat $datafile | grep ^- | grep -v ";-;" > $datafile.new
+
 #Compilation Program C
 compile()
 {
@@ -53,11 +56,11 @@ if [ $action = "histo" ]; then
 
         compile $action
 
-        $dirname/bin/$action $csvfile $mode
+        $dirname/bin/$action $datafile.new $action $mode
         retour=$?
 
         if [ $retour -ne 0 ]; then
-                echo "Erreur : echec du traitement histogramme."
+                echo "Erreur : echec du traitement histgramme."
                 exit 1
         fi
 
