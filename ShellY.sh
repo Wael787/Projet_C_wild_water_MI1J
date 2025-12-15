@@ -70,6 +70,10 @@ if [[ "$commande" == "histo" ]]; then	#Cas histo (on veut donc 2 arguments histo
 
 	#Appel du C : il calcule et écrit le .dat
 	echo "[INFO] Génération des données via C --> $fichier_sortie_dat"
+	#Filtre du CSV 
+	#(filtre des données pour prendre que les lignes source=>usine
+	#cat $datafile | grep ^- | grep -v ";-;" > $datafile.new)
+	#REFAIRE et revoir condition du FILTRE AVEC grep ou awk 
 	dataset_filtre="$(mktemp)"
 	grep "Plant #" "$dataset" > "$dataset_filtre"
 	if [[ ! -s "$dataset_filtre" ]]; then
