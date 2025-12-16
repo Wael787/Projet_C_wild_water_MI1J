@@ -84,7 +84,7 @@ if [[ "$commande" == "histo" ]]; then	#Cas histo (on veut donc 2 arguments histo
 	#Tri par valeur (colonne 2) puis extraction 50 (plus petite) / 10 (plus grande)
 	temp_trie="$(mktemp)"	#fichier temporaire qui stock les usines trier en ordre croissant (volume max)
 	temp_petit_nf="$(mktemp)"	#fichier temporaires des 50 plus petites usine(pour le max) non formaté pour gunplot
-	temp_grand_nf="$(mktemp)"	#fichier temporaires des 50 plus petites usine(pour le max) non formaté pour gunplot
+	temp_grand_nf="$(mktemp)"	#fichier temporaires des 10 plus grandes usine(pour le max) non formaté pour gunplot
   	temp_petit50="$(mktemp)"	
   	temp_grand10="$(mktemp)"
 
@@ -210,7 +210,7 @@ GNUPLOT
 	rm -f "$temp_trie" "$temp_petit50" "$temp_grand10"
 	rm -f "$dataset_filtre"
 
-	echo "[OK] Données : $fichier_sortie_dat"
+	#echo "[OK] Données : $fichier_sortie_dat"
 	echo "[OK] Images : $image_petit50 et $image_grand10"
 	exit 0
 fi
