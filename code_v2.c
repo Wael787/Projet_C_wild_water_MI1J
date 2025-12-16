@@ -7,14 +7,13 @@
 // Taille maximale d'un identifiant (nom d'usine, source, etc.)
 #define MAX_ID 256
 
-		// STRUCTURES DE DONNÉES
 
 
 typedef struct arbre_usine {
-    char* id;              // Identifiant unique de l'usine
-    long long vol_max;     // Capacité maximale de traitement, milliers de m³.an^-1
-    long long vol_capte;   // Volume total capté depuis toutes les sources, milliers de m³
-    long long vol_traite;  // Volume total traité (capté - pertes) en milliers de m³
+    char* id;              
+    long long vol_max;     
+    long long vol_capte;   
+    long long vol_traite;  
     int hauteur;           
     struct arbre_usine* fg; 
     struct arbre_usine* fd; 
@@ -123,8 +122,7 @@ pUsine insertUsine(pUsine racine, pUsine nouvelle_data) {
     } 
     else {     
         
-        // Mise à jour de vol_max seulement si on lit la ligne "USINE" du CSV
-        // (reconnaissable par vol_max > 0 dans nouvelle_data)
+        
         if (nouvelle_data->vol_max > 0) 
             racine->vol_max = nouvelle_data->vol_max;
         
@@ -227,23 +225,13 @@ void libererAVL(pUsine racine) {
 
 // ========== FONCTIONS DE CONVERSION ROBUSTES ==========
 
-/**
- * Convertit une chaîne en long long avec gestion d'erreurs
- * 
- * Paramètres :
- * - str : chaîne à convertir
- * 
- * Retourne :
- * - La valeur convertie en cas de succès
- * - 0 si la chaîne est "-" (valeur manquante dans le CSV)
- * - 0 en cas d'erreur de conversion (avec message d'avertissement)
- */
+
 long long parseLongLong(const char* str) {
     // Cas spécial : valeur manquante dans le CSV
     if (strcmp(str, "-") == 0) 
         return 0;
     
-    // Conversion avec strtoll (plus robuste que atoll)
+    
     char* endptr;
     errno = 0;
     long long val = strtoll(str, &endptr, 10);
