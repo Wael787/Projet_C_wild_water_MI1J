@@ -119,11 +119,14 @@ if [[ "$commande" == "histo" ]]; then	#Cas histo (on veut donc 2 arguments histo
 			# 1) écrire l'entete
 			echo "identifiant;max volume" > "$temp_grand10"
 
-			# 2) prendre les 50 premieres lignes soit les 50 plus petites et on les mets dans un fichier temporaire
+			# 2) prendre les 10 dernieres lignes soit les 10 plus grandes et on les mets dans un fichier temporaire
 			tail -n 10 "$temp_trie" > "$temp_grand_nf"
 
 			# 3) reformater ( -;usine;-;capcité;- ) en => (usine;capacité) 
 			awk -F';' '{ print $2 ";" $4 }' "$temp_grand_nf" >> "$temp_grand10"
+			
+			#suppression des fichiers temporaires inutiles
+			rm -f "$temp_petit_nf" "$temp_grand_nf"
 
 
 	#On garde que source->usine Pour histo src ou real ( -;source;usine;volume;%fuites )
@@ -162,20 +165,22 @@ if [[ "$commande" == "histo" ]]; then	#Cas histo (on veut donc 2 arguments histo
 
 		tail -n +2 "$fichier_sortie_dat" | sort -t';' -k2,2g > "$temp_trie"
 
+			# 50 plus petites
+		{
+			echo "$entete"
+			head -n 50 "$temp_trie"
+		} > "$temp_petit50"
+
+  		# 10 plus grandes
+		{
+			echo "$entete"
+   	 	tail -n 10 "$temp_trie"
+  		} > "$temp_grand10"
+				
 	fi
 
 	
-  	# 50 plus petites
-	{
-		echo "$entete"
-		head -n 50 "$temp_trie"
-	} > "$temp_petit50"
-
-  	# 10 plus grandes
-	{
-		echo "$entete"
-    	tail -n 10 "$temp_trie"
-  	} > "$temp_grand10"
+  	
 
 	# Gnuplot (2 images)
  	ylabel="Volume (k.m3/an)"
