@@ -1,0 +1,15 @@
+Utilisation de la commande histo
+
+Format :
+
+./mon_programme histo {mode} {Fichier_In} {Fichier_Out}
+
+Arguments :
+
+    {mode}: Le type de calcul d'histogramme (max, src, real).
+
+    {Fichier_In}: Chemin vers le fichier de données d'entrée (lecture seule).
+
+    {Fichier_Out}: Chemin vers le fichier de sortie qui contiendra l'histogramme calculé.
+
+⚠️ ATTENTION : Si le fichier spécifié par {Fichier_Out} existe déjà, son contenu sera entièrement écrasé par le nouveau résultat de l'histogramme sans avertissement. Assurez-vous d'utiliser un nom de fichier unique si vous souhaitez conserver les résultats précédents.
