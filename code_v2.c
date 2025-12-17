@@ -164,7 +164,7 @@ pUsine insertUsine(pUsine racine, pUsine nouvelle_data) {
 }
 
 pUsine rechercherUsine(pUsine racine, const char* id) {
-    // Cas de base : arbre vide ou fin de branche atteinte
+  
     if (racine == NULL)
         return NULL;  // Usine non trouvée
     
@@ -185,24 +185,19 @@ void parcoursInfixeInverse(pUsine racine, FILE* fichier, const char* type) {
     if (racine == NULL)
         return;
     
-    // ÉTAPE 1 : Parcourir d'abord le sous-arbre DROIT (pour l'ordre inverse)
+    
     parcoursInfixeInverse(racine->fd, fichier, type);
     
-    // ÉTAPE 2 : Traiter le nœud actuel (écrire les données dans le fichier)
     if (strcmp(type, "max") == 0) {
-        // Écrire la capacité maximale
         fprintf(fichier, "%s;%lld\n", racine->id, racine->vol_max);
     } 
     else if (strcmp(type, "src") == 0) {
-        // Écrire le volume capté
         fprintf(fichier, "%s;%lld\n", racine->id, racine->vol_capte);
     } 
     else if (strcmp(type, "real") == 0) {
-        // Écrire le volume traité
         fprintf(fichier, "%s;%lld\n", racine->id, racine->vol_traite);
     }
     
-    // ÉTAPE 3 : Parcourir ensuite le sous-arbre GAUCHE
     parcoursInfixeInverse(racine->fg, fichier, type);
 }
 
@@ -211,19 +206,16 @@ void libererAVL(pUsine racine) {
     // Cas de base : nœud vide, rien à libérer
     if (racine == NULL)
         return;
-    
-    // Libérer récursivement les sous-arbres
+
     libererAVL(racine->fg);
     libererAVL(racine->fd);
     
-    // Libérer l'identifiant (chaîne de caractères allouée dynamiquement)
     free(racine->id);
     
-    // Libérer la structure elle-même
     free(racine);
 }
 
-// ========== FONCTIONS DE CONVERSION ROBUSTES ==========
+// FONCTIONS DE CONVERSION ROBUSTES
 
 
 long long parseLongLong(const char* str) {
@@ -236,9 +228,6 @@ long long parseLongLong(const char* str) {
     errno = 0;
     long long val = strtoll(str, &endptr, 10);
     
-    // Vérification des erreurs
-    // errno == ERANGE : débordement (nombre trop grand)
-    // endptr == str : aucun chiffre n'a été lu
     // *endptr != '\0' : des caractères invalides suivent le nombre
     if (errno == ERANGE || endptr == str || *endptr != '\0') {
         fprintf(stderr, "Avertissement: Erreur de conversion pour long long: %s\n", str);
@@ -250,16 +239,13 @@ long long parseLongLong(const char* str) {
 
 
 double parseDouble(const char* str) {
-    // Cas spécial : valeur manquante
+
     if (strcmp(str, "-") == 0) 
         return 0.0;
-    
-    // Conversion avec strtod (plus robuste que atof)
     char* endptr;
     errno = 0;
     double val = strtod(str, &endptr);
-    
-    // Vérification des erreurs
+  
     if (errno == ERANGE || endptr == str || *endptr != '\0') {
         fprintf(stderr, "Avertissement: Erreur de conversion pour double: %s\n", str);
         return 0.0;
@@ -270,17 +256,16 @@ double parseDouble(const char* str) {
 
 
 
-// ========== FONCTION PRINCIPALE ==========
+// FONCTION PRINCIPALE
 
 int main(int argc, char* argv[]) {
     
     
     if (argc < 3) {
         fprintf(stderr, "Erreur: Usage: %s <fichier_csv> histo <type: max|src|real>\n", argv[0]);
-        return 1;  // Code d'erreur (la consigne demande un code > 0 en cas d'erreur)
+        return 1;
     }
-    
-    // Vérifier que l'argument 2 est bien "histo"
+ 
     if (strcmp(argv[2], "histo") != 0) {
         fprintf(stderr, "Erreur: Ce programme ne supporte que le traitement 'histo'.\n");
         return 1;
