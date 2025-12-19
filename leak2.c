@@ -23,6 +23,7 @@ NoeudAVL* rot_gauche(NoeudAVL* x) {
 // --- GESTION MÉMOIRE ---
 NoeudReseau* creer_noeud_reseau(const char* id) {
     NoeudReseau* n = malloc(sizeof(NoeudReseau));
+    if(!n) exit(1);
     n->id = strdup(id);
     n->volume_entrant = 0.0;
     n->nb_enfants = 0;
@@ -30,7 +31,6 @@ NoeudReseau* creer_noeud_reseau(const char* id) {
     return n;
 }
 
-// --- INSERTION AVL ---
 NoeudAVL* inserer_avl(NoeudAVL* node, const char* id, NoeudReseau** resultat) {
     if (!node) {
         *resultat = creer_noeud_reseau(id);
@@ -79,7 +79,6 @@ void liberer_avl(NoeudAVL* a) {
     if (!a) return;
     liberer_avl(a->fg);
     liberer_avl(a->fd);
-    // Libération des liens enfants
     Enfant* curr = a->ptr_noeud->liste_fils;
     while(curr) { Enfant* tmp = curr; curr = curr->suivant; free(tmp); }
     free(a->ptr_noeud->id); free(a->ptr_noeud);
