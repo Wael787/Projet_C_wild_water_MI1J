@@ -1,0 +1,18 @@
+CC = gcc
+CFLAGS = -Wall -Wextra -O3
+BIN_DIR = bin
+SRC = main.c leaks.c
+OBJ = $(SRC:.c=.o)
+EXEC = $(BIN_DIR)/leaks
+
+all: $(EXEC)
+
+$(EXEC): $(OBJ)
+	mkdir -p $(BIN_DIR)
+	$(CC) $(OBJ) -o $(EXEC)
+
+%.o: %.c leaks.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f *.o $(EXEC)
