@@ -121,8 +121,3 @@ void liberer_avl(NoeudAVL* a) {
     liberer_avl(a->fg); liberer_avl(a->fd);
     free(a->id); free(a);
 }
-
-int main(int argc, char** argv) {
-    if (argc < 4) return ERR_USAGE;
-    return traiter_leaks(argv[1], argv[2], argv[3]);
-}
