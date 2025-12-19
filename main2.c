@@ -1,48 +1,52 @@
 #include "leaks.h"
 
 int main(int argc, char** argv) {
-    if (argc < 3) {
-        printf("Usage: %s <fichier.csv> <id_usine>\n", argv[0]);
-        return 1;
-    }
+    if (argc < 4) return 1; // datafile, temp_csv, usine_id
 
-    FILE* f = fopen(argv[1], "r");
-    if (!f) return 2;
+    const char* f_in_path = argv[1];
+    const char* f_out_path = argv[2];
+    const char* id_target = argv[3];
+
+    FILE* f_in = fopen(f_in_path, "r");
+    if (!f_in) return 2;
 
     NoeudAVL* index = NULL;
     NoeudReseau* usine = NULL;
     char ligne[1024];
 
-    while (fgets(ligne, 1024, f)) {
-        char id_am[50], id_av[50];
+    while (fgets(ligne, 1024, f_in)) {
+        char am[64], av[64];
         double vol, fuite;
-        if (sscanf(ligne, "%[^;];%[^;];%lf;%lf", id_am, id_av, &vol, &fuite) == 4) {
-            NoeudReseau *amont, *aval;
-            index = inserer_avl(index, id_am, &amont);
-            index = inserer_avl(index, id_av, &aval);
+        // Format attendu: id_amont;id_aval;volume;fuite
+        if (sscanf(ligne, "%63[^;];%63[^;];%lf;%lf", am, av, &vol, &fuite) == 4) {
+            NoeudReseau *n_am, *n_av;
+            index = inserer_avl(index, am, &n_am);
+            index = inserer_avl(index, av, &n_av);
 
-            if (strcmp(id_am, argv[2]) == 0 && usine == NULL) {
-                usine = amont;
+            if (strcmp(am, id_target) == 0 && usine == NULL) {
+                usine = n_am;
                 usine->volume_entrant = vol;
             }
-            ajouter_enfant(amont, aval, fuite);
+            ajouter_enfant(n_am, n_av, fuite);
         }
     }
+    fclose(f_in);
 
     if (usine) {
         double total_pertes = 0.0;
-        double vol_init = usine->volume_entrant;
         calculer_pertes_recursif(usine, &total_pertes);
 
-        printf("--- RÉSULTATS ---\n");
-        printf("Volume traité  : %.3f Mm3\n", vol_init / 1000.0);
-        printf("Pertes totales : %.3f Mm3\n", total_pertes / 1000.0);
-        printf("Rendement      : %.2f %%\n", (1.0 - (total_pertes / vol_init)) * 100.0);
+        FILE* f_out = fopen(f_out_path, "w");
+        if (f_out) {
+            // Écrit au format: identifier;Leak volume
+            fprintf(f_out, "%s;%.3f\n", id_target, total_pertes);
+            fclose(f_out);
+        }
     } else {
-        printf("Erreur : Usine %s introuvable.\n", argv[2]);
+        liberer_avl(index);
+        return 3; // Usine introuvable
     }
 
     liberer_avl(index);
-    fclose(f);
     return 0;
 }
