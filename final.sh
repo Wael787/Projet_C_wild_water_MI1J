@@ -49,7 +49,7 @@ if [ "$action" = "histo" ]; then
     mode=$3
     csvfile="$dirname/csv/histo_$mode.csv"
 
-    # taitement sur le shell (max, src, real)
+    # traitement sur le shell (max, src, real)
     if [ "$mode" = "max" ] || [ "$mode" = "src" ] || [ "$mode" = "real" ]; then
         echo "Traitement via Shell/AWK ($mode)..."
         # Logique de calcul via AWK (simplifiée pour l'exemple)
@@ -65,10 +65,17 @@ if [ "$action" = "histo" ]; then
     elif [ "$mode" = "maxC" ] || [ "$mode" = "srcC" ] || [ "$mode" = "reelC" ]; then
         echo "Traitement via Programme C/AVL ($mode)..."
         compile "histo"
-        "$dirname/bin/histo" "$datafile" "$csvfile" "$mode"
+        "$dirname/bin/histo" "$datafile" "$csvfile.tmp" "$mode"
+        retour=$?
+        if [ $retour -ne 0 ]; then
+            echo "Erreur : Le programme histo a échoué."
+            exit 1
+        fi
         
-        # On trie le résultat du C par volume décroissant pour faciliter l'extraction
-        tail -n +2 "$csvfile" | sort -t';' -k2,2nr > "$csvfile.tmp"
+        # Si le fichier n'existe pas, le créer
+        if [ ! -f "$csvfile.tmp" ]; then
+            echo "identifier;volume" > "$csvfile.tmp"
+        fi
     else
         echo "Mode inconnu"; exit 1
     fi
@@ -76,7 +83,7 @@ if [ "$action" = "histo" ]; then
     # top 10 max et top 50 min
     echo "Génération des classements dans $csvfile..."
     
-      echo "    TOP 10 PLUS GRANDS VOLUMES" > "$csvfile"
+    echo "    TOP 10 PLUS GRANDS VOLUMES" > "$csvfile"
     echo "identifier;volume" >> "$csvfile"
     head -n 10 "$csvfile.tmp" >> "$csvfile"
     
@@ -85,7 +92,7 @@ if [ "$action" = "histo" ]; then
     echo "identifier;volume" >> "$csvfile"
     tail -n 50 "$csvfile.tmp" | sort -t';' -k2,2n >> "$csvfile"
 
-    rm "$csvfile.tmp"
+    rm -f "$csvfile.tmp"
 
     # GNUPLOT
     if command -v gnuplot >/dev/null 2>&1; then
@@ -145,3 +152,8 @@ elif [ "$action" = "leaks" ]; then
     else
         echo "Erreur : Le fichier $csvfile n'a pas été créé. Vérifiez si l'identifiant d'usine existe dans le fichier .dat"
     fi
+else
+    echo "Action inconnue: $action"
+    echo "Actions valides: histo, leaks"
+    exit 1
+fi
