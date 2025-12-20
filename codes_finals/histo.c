@@ -1,187 +1,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #define MAX_LINE 2048
-#define MAX_NODES 10000
+#define MAX_ENTRIES 10000
 
-// Fonction strdup portable
-char* my_strdup(const char* s) {
-    if (!s) return NULL;
-    size_t len = strlen(s) + 1;
-    char* dup = malloc(len);
-    if (dup) memcpy(dup, s, len);
-    return dup;
-}
-
-
-// STRUCTURES AVL
-
-typedef struct Noeud {
-    char* id;
-    double volume;
-    int hauteur;
-    struct Noeud* fg;
-    struct Noeud* fd;
-} Noeud;
-
-typedef Noeud* pNoeud;
-
-
-// AVL UTIL
-
-int hauteur(pNoeud n) {
-    return (n == NULL) ? 0 : n->hauteur;
-}
-
-int max(int a, int b) {
-    return (a > b) ? a : b;
-}
-
-pNoeud creerNoeud(const char* id, double vol) {
-    pNoeud n = malloc(sizeof(Noeud));
-    if (!n) {
-        fprintf(stderr, "Erreur allocation mémoire\n");
-        exit(1);
-    }
-    n->id = my_strdup(id);
-    if (!n->id) {
-        fprintf(stderr, "Erreur allocation mémoire\n");
-        free(n);
-        exit(1);
-    }
-    n->volume = vol;
-    n->hauteur = 1;
-    n->fg = NULL;
-    n->fd = NULL;
-    return n;
-}
-
-int equilibre(pNoeud n) {
-    return (n == NULL) ? 0 : hauteur(n->fg) - hauteur(n->fd);
-}
-
-pNoeud rotationDroite(pNoeud y) {
-    pNoeud x = y->fg;
-    pNoeud T2 = x->fd;
-
-    x->fd = y;
-    y->fg = T2;
-
-    y->hauteur = max(hauteur(y->fg), hauteur(y->fd)) + 1;
-    x->hauteur = max(hauteur(x->fg), hauteur(x->fd)) + 1;
-
-    return x;
-}
-
-pNoeud rotationGauche(pNoeud x) {
-    pNoeud y = x->fd;
-    pNoeud T2 = y->fg;
-
-    y->fg = x;
-    x->fd = T2;
-
-    x->hauteur = max(hauteur(x->fg), hauteur(x->fd)) + 1;
-    y->hauteur = max(hauteur(y->fg), hauteur(y->fd)) + 1;
-
-    return y;
-}
-
-pNoeud insertAVL(pNoeud racine, const char* id, double vol) {
-    if (racine == NULL)
-        return creerNoeud(id, vol);
-
-    int cmp = strcmp(id, racine->id);
-
-    if (cmp < 0)
-        racine->fg = insertAVL(racine->fg, id, vol);
-    else if (cmp > 0)
-        racine->fd = insertAVL(racine->fd, id, vol);
-    else {
-        racine->volume += vol;
-        return racine;
-    }
-
-    racine->hauteur = 1 + max(hauteur(racine->fg), hauteur(racine->fd));
-
-    int eq = equilibre(racine);
-
-    if (eq > 1 && strcmp(id, racine->fg->id) < 0)
-        return rotationDroite(racine);
-
-    if (eq < -1 && strcmp(id, racine->fd->id) > 0)
-        return rotationGauche(racine);
-
-    if (eq > 1 && strcmp(id, racine->fg->id) > 0) {
-        racine->fg = rotationGauche(racine->fg);
-        return rotationDroite(racine);
-    }
-
-    if (eq < -1 && strcmp(id, racine->fd->id) < 0) {
-        racine->fd = rotationDroite(racine->fd);
-        return rotationGauche(racine);
-    }
-
-    return racine;
-}
-
-void libererAVL(pNoeud r) {
-    if (!r) return;
-    libererAVL(r->fg);
-    libererAVL(r->fd);
-    free(r->id);
-    free(r);
-}
-
-
-// EXTRACTION DU CONTENU AVL → TABLEAU
-
+// Structure simple pour stocker un identifiant et son volume
 typedef struct {
     char id[256];
     double volume;
-} elem_t;
+} Entry;
 
-void convertirAVL(pNoeud r, elem_t* tab, int* idx) {
-    if (!r) return;
-    convertirAVL(r->fg, tab, idx);
-    if (*idx < MAX_NODES) {
-        strncpy(tab[*idx].id, r->id, sizeof(tab[*idx].id) - 1);
-        tab[*idx].id[sizeof(tab[*idx].id) - 1] = '\0';
-        tab[*idx].volume = r->volume;
-        (*idx)++;
-    }
-    convertirAVL(r->fd, tab, idx);
-}
+// Tableau global pour stocker toutes les entrées
+Entry entries[MAX_ENTRIES];
+int nb_entries = 0;
 
-int cmp_desc(const void* a, const void* b) {
-    double x = ((elem_t*)a)->volume;
-    double y = ((elem_t*)b)->volume;
-    if (x > y) return -1;
-    if (x < y) return 1;
-    return 0;
-}
-
-int cmp_id(const void* a, const void* b) {
-    return strcmp(((elem_t*)a)->id, ((elem_t*)b)->id);
-}
-
-
-// FONCTIONS UTILITAIRES
-
+// Fonction pour enlever les espaces en début et fin de chaîne
 void trim(char* str) {
     if (!str) return;
     
-    // Supprimer espaces/newlines à la fin
-    char *end = str + strlen(str) - 1;
-    while (end >= str && (*end == '\n' || *end == '\r' || *end == ' ' || *end == '\t')) {
-        *end = '\0';
-        end--;
+    // Enlever les espaces à la fin
+    int len = strlen(str);
+    while (len > 0 && (str[len-1] == ' ' || str[len-1] == '\n' || str[len-1] == '\r' || str[len-1] == '\t')) {
+        str[len-1] = '\0';
+        len--;
     }
     
-    // Supprimer espaces au début
-    char *start = str;
-    while (*start && (*start == ' ' || *start == '\t')) {
+    // Enlever les espaces au début
+    char* start = str;
+    while (*start == ' ' || *start == '\t') {
         start++;
     }
     
@@ -190,46 +37,66 @@ void trim(char* str) {
     }
 }
 
+// Fonction pour vérifier si un champ est un tiret
 int is_dash(const char* s) {
-    if (!s) return 0;
     return (strcmp(s, "-") == 0);
 }
 
-int not_dash(const char* s) {
-    if (!s) return 0;
-    return (strcmp(s, "-") != 0);
-}
-
-// Parser sécurisé de ligne CSV
-
-int parse_line(char* line, char* fields[], int max_fields) {
+// Fonction pour découper une ligne CSV avec le séparateur ';'
+int split_line(char* line, char* fields[], int max_fields) {
     int count = 0;
-    char* ptr = line;
-    char* start = line;
+    char* token = strtok(line, ";");
     
-    while (*ptr && count < max_fields) {
-        if (*ptr == ';') {
-            *ptr = '\0';
-            fields[count] = start;
-            trim(fields[count]);
-            count++;
-            start = ptr + 1;
-        }
-        ptr++;
-    }
-    
-    // Dernier champ
-    if (count < max_fields && start) {
-        fields[count] = start;
+    while (token != NULL && count < max_fields) {
+        fields[count] = token;
         trim(fields[count]);
         count++;
+        token = strtok(NULL, ";");
     }
     
     return count;
 }
 
-// FONCTIONS DE TRAITEMENT
+// Fonction pour trouver un identifiant dans le tableau
+int find_entry(const char* id) {
+    for (int i = 0; i < nb_entries; i++) {
+        if (strcmp(entries[i].id, id) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
 
+// Fonction pour ajouter ou mettre à jour une entrée
+void add_entry(const char* id, double volume) {
+    int index = find_entry(id);
+    
+    if (index >= 0) {
+        // L'identifiant existe déjà, on ajoute le volume
+        entries[index].volume += volume;
+    } else {
+        // Nouvel identifiant
+        if (nb_entries >= MAX_ENTRIES) {
+            fprintf(stderr, "Erreur: trop d'entrées (max %d)\n", MAX_ENTRIES);
+            return;
+        }
+        strncpy(entries[nb_entries].id, id, sizeof(entries[nb_entries].id) - 1);
+        entries[nb_entries].id[sizeof(entries[nb_entries].id) - 1] = '\0';
+        entries[nb_entries].volume = volume;
+        nb_entries++;
+    }
+}
+
+// Fonction de comparaison pour trier par volume décroissant
+int compare_desc(const void* a, const void* b) {
+    Entry* ea = (Entry*)a;
+    Entry* eb = (Entry*)b;
+    if (ea->volume > eb->volume) return -1;
+    if (ea->volume < eb->volume) return 1;
+    return 0;
+}
+
+// MODE MAX : volume max par usine
 void process_max(const char* datafile, const char* csvfile) {
     FILE* fin = fopen(datafile, "r");
     if (!fin) {
@@ -237,80 +104,48 @@ void process_max(const char* datafile, const char* csvfile) {
         exit(1);
     }
 
-    printf("Génération Histogrammes pour les Usines\n\n");
+    printf("Mode MAX : Calcul des volumes maximaux par usine\n");
 
-    pNoeud racine = NULL;
     char line[MAX_LINE];
-    int line_num = 0;
     
-    // Lire et ignorer l'en-tête
-    if (fgets(line, sizeof(line), fin)) {
-        line_num++;
-    }
+    // Ignorer la première ligne (en-tête)
+    if (fgets(line, sizeof(line), fin)) {}
 
+    // Lire toutes les lignes
     while (fgets(line, sizeof(line), fin)) {
-        line_num++;
-        
-        char* fields[10] = {NULL};
-        int field_count = parse_line(line, fields, 10);
+        char* fields[10];
+        int nb_fields = split_line(line, fields, 10);
 
-        if (field_count < 5) {
-            continue;
-        }
+        if (nb_fields < 5) continue;
 
-        // Condition: $1=="-" && $2!="-" && $3=="-" && $4!="-" && $5=="-"
-        if (is_dash(fields[0]) && not_dash(fields[1]) && is_dash(fields[2]) && not_dash(fields[3]) && is_dash(fields[4])) 
-        {    
-            double vol = atof(fields[3]);
-            racine = insertAVL(racine, fields[1], vol);
+        // Condition: champ 1 = "-", champ 2 != "-", champ 3 = "-", champ 4 != "-"
+        if (is_dash(fields[0]) && !is_dash(fields[1]) && is_dash(fields[2]) && !is_dash(fields[3])) {
+            double volume = atof(fields[3]);
+            add_entry(fields[1], volume);
         }
     }
     fclose(fin);
 
-    if (racine == NULL) {
-        fprintf(stderr, "Aucune donnée trouvée pour le mode max\n");
-        FILE* fout = fopen(csvfile, "w");
-        if (fout) {
-            fprintf(fout, "identifier;max volume (k.m3.year-1)\n");
-            fclose(fout);
-        }
-        return;
-    }
+    // Trier par volume décroissant
+    qsort(entries, nb_entries, sizeof(Entry), compare_desc);
 
-    // Conversion et tri
-    elem_t* tab = malloc(MAX_NODES * sizeof(elem_t));
-    if (!tab) {
-        fprintf(stderr, "Erreur allocation mémoire\n");
-        libererAVL(racine);
-        exit(1);
-    }
-
-    int count = 0;
-    convertirAVL(racine, tab, &count);
-    qsort(tab, count, sizeof(elem_t), cmp_desc);
-
-    // Écriture
+    // Écrire le résultat
     FILE* fout = fopen(csvfile, "w");
     if (!fout) {
         fprintf(stderr, "Erreur: impossible de créer '%s'\n", csvfile);
-        free(tab);
-        libererAVL(racine);
         exit(1);
     }
 
-    fprintf(fout, "identifier;max volume (k.m3.year-1)\n");
-    int lim = (count < 10) ? count : 10;
-    for (int i = 0; i < lim; i++) {
-        fprintf(fout, "%s;%.0f\n", tab[i].id, tab[i].volume);
+    fprintf(fout, "identifier;volume\n");
+    for (int i = 0; i < nb_entries; i++) {
+        fprintf(fout, "%s;%.0f\n", entries[i].id, entries[i].volume);
     }
 
     fclose(fout);
-    free(tab);
-    libererAVL(racine);
-
-    printf("Histogramme généré max : %s\n", csvfile);
+    printf("Fichier généré: %s (%d usines)\n", csvfile, nb_entries);
 }
 
+// MODE SRC : somme des volumes par source
 void process_src(const char* datafile, const char* csvfile) {
     FILE* fin = fopen(datafile, "r");
     if (!fin) {
@@ -318,68 +153,42 @@ void process_src(const char* datafile, const char* csvfile) {
         exit(1);
     }
 
-    printf("Génération Histogrammes pour les Sources\n\n");
+    printf("Mode SRC : Calcul des volumes par source\n");
 
-    pNoeud racine = NULL;
     char line[MAX_LINE];
-    
+
+    // Lire toutes les lignes
     while (fgets(line, sizeof(line), fin)) {
-        char* fields[10] = {NULL};
-        int field_count = parse_line(line, fields, 10);
+        char* fields[10];
+        int nb_fields = split_line(line, fields, 10);
 
-        if (field_count < 5) continue;
+        if (nb_fields < 5) continue;
 
-        // Condition: $1=="-" && $2!="-" && $3!="-" && $4!="-" && $5!="-"
-        if (is_dash(fields[0]) && not_dash(fields[1]) && not_dash(fields[2]) && not_dash(fields[3]) && not_dash(fields[4])) 
-        {
-            double vol = atof(fields[3]);
-            racine = insertAVL(racine, fields[2], vol);
+        // Condition: champ 1 = "-", champs 2, 3, 4 != "-"
+        if (is_dash(fields[0]) && !is_dash(fields[1]) && !is_dash(fields[2]) && !is_dash(fields[3])) {
+            double volume = atof(fields[3]);
+            add_entry(fields[2], volume);
         }
     }
     fclose(fin);
 
-    if (racine == NULL) {
-        fprintf(stderr, "Aucune donnée trouvée pour le mode src\n");
-        FILE* fout = fopen(csvfile, "w");
-        if (fout) {
-            fprintf(fout, "identifier;source volume (k.m3.year-1)\n");
-            fclose(fout);
-        }
-        return;
-    }
-
-    elem_t* tab = malloc(MAX_NODES * sizeof(elem_t));
-    if (!tab) {
-        fprintf(stderr, "Erreur allocation mémoire\n");
-        libererAVL(racine);
-        exit(1);
-    }
-
-    int count = 0;
-    convertirAVL(racine, tab, &count);
-    qsort(tab, count, sizeof(elem_t), cmp_id);
-
+    // Écrire le résultat (non trié, le script bash le fera)
     FILE* fout = fopen(csvfile, "w");
     if (!fout) {
         fprintf(stderr, "Erreur: impossible de créer '%s'\n", csvfile);
-        free(tab);
-        libererAVL(racine);
         exit(1);
     }
 
-    fprintf(fout, "identifier;source volume (k.m3.year-1)\n");
-    for (int i = 0; i < count; i++) {
-        fprintf(fout, "%s;%.0f\n", tab[i].id, tab[i].volume);
+    fprintf(fout, "identifier;volume\n");
+    for (int i = 0; i < nb_entries; i++) {
+        fprintf(fout, "%s;%.0f\n", entries[i].id, entries[i].volume);
     }
 
     fclose(fout);
-    free(tab);
-    libererAVL(racine);
-
-    printf("Histogramme généré src : %s\n", csvfile);
-    printf("\n");
+    printf("Fichier généré: %s (%d sources)\n", csvfile, nb_entries);
 }
 
+// MODE REEL : volume réel = volume * (100 - pourcentage) / 100
 void process_reel(const char* datafile, const char* csvfile) {
     FILE* fin = fopen(datafile, "r");
     if (!fin) {
@@ -387,80 +196,52 @@ void process_reel(const char* datafile, const char* csvfile) {
         exit(1);
     }
 
-    printf("Génération Histogrammes pour les Réels\n\n");
+    printf("Mode REEL : Calcul des volumes réels par source\n");
 
-    pNoeud racine = NULL;
     char line[MAX_LINE];
     
+    // Ignorer la première ligne (en-tête)
     if (fgets(line, sizeof(line), fin)) {}
 
+    // Lire toutes les lignes
     while (fgets(line, sizeof(line), fin)) {
-        char* fields[10] = {NULL};
-        int field_count = parse_line(line, fields, 10);
+        char* fields[10];
+        int nb_fields = split_line(line, fields, 10);
 
-        if (field_count < 5) continue;
+        if (nb_fields < 5) continue;
 
-        // Condition: $1=="-" && $2!="-" && $3!="-" && $4!="-" && $5!="-"
-        if (is_dash(fields[0]) && not_dash(fields[1]) && not_dash(fields[2]) && 
-            not_dash(fields[3]) && not_dash(fields[4])) {
+        // Condition: champ 1 = "-", champs 2, 3, 4, 5 != "-"
+        if (is_dash(fields[0]) && !is_dash(fields[1]) && !is_dash(fields[2]) && 
+            !is_dash(fields[3]) && !is_dash(fields[4])) {
             
             double volume = atof(fields[3]);
             double percentage = atof(fields[4]);
-            double result = volume * (100.0 - percentage) / 100.0;
-            racine = insertAVL(racine, fields[2], result);
+            double volume_reel = volume * (100.0 - percentage) / 100.0;
+            add_entry(fields[2], volume_reel);
         }
     }
     fclose(fin);
 
-    if (racine == NULL) {
-        fprintf(stderr, "Aucune donnée trouvée pour le mode reel\n");
-        FILE* fout = fopen(csvfile, "w");
-        if (fout) {
-            fprintf(fout, "identifier;real volume (k.m3.year-1)\n");
-            fclose(fout);
-        }
-        return;
-    }
-
-    elem_t* tab = malloc(MAX_NODES * sizeof(elem_t));
-    if (!tab) {
-        fprintf(stderr, "Erreur allocation mémoire\n");
-        libererAVL(racine);
-        exit(1);
-    }
-
-    int count = 0;
-    convertirAVL(racine, tab, &count);
-    qsort(tab, count, sizeof(elem_t), cmp_id);
-
+    // Écrire le résultat (non trié, le script bash le fera)
     FILE* fout = fopen(csvfile, "w");
     if (!fout) {
         fprintf(stderr, "Erreur: impossible de créer '%s'\n", csvfile);
-        free(tab);
-        libererAVL(racine);
         exit(1);
     }
 
-    fprintf(fout, "identifier;real volume (k.m3.year-1)\n");
-    for (int i = 0; i < count; i++) {
-        fprintf(fout, "%s;%.2f\n", tab[i].id, tab[i].volume);
+    fprintf(fout, "identifier;volume\n");
+    for (int i = 0; i < nb_entries; i++) {
+        fprintf(fout, "%s;%.2f\n", entries[i].id, entries[i].volume);
     }
 
     fclose(fout);
-    free(tab);
-    libererAVL(racine);
-
-    printf("Histogramme généré reel : %s\n", csvfile);
-    printf("Nombre de sources: %d\n\n", count);
+    printf("Fichier généré: %s (%d sources)\n", csvfile, nb_entries);
 }
 
-// ----------------------------
 // MAIN
-// ----------------------------
 int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        fprintf(stderr, "Usage:\n");
-        fprintf(stderr, "  %s <file.dat> <output.csv> {maxC|srcC|reelC}\n", argv[0]);
+    if (argc < 4) {
+        fprintf(stderr, "Usage: %s <fichier.dat> <fichier.csv> {maxC|srcC|reelC}\n", argv[0]);
         return 1;
     }
 
@@ -468,23 +249,14 @@ int main(int argc, char* argv[]) {
     char* csvfile = argv[2];
     char* mode = argv[3];
 
-    // Déterminer le mode
-    char actual_mode[32];
-    strncpy(actual_mode, mode, sizeof(actual_mode) - 1);
-    actual_mode[sizeof(actual_mode) - 1] = '\0';
-    
-    size_t len = strlen(actual_mode);
-    if (len > 0 && actual_mode[len - 1] == 'C') {
-        actual_mode[len - 1] = '\0';
-    }
-
-    if (strcmp(actual_mode, "max") == 0) {
+    // Déterminer le mode (enlever le 'C' à la fin)
+    if (strcmp(mode, "maxC") == 0) {
         process_max(datafile, csvfile);
     }
-    else if (strcmp(actual_mode, "src") == 0) {
+    else if (strcmp(mode, "srcC") == 0) {
         process_src(datafile, csvfile);
     }
-    else if (strcmp(actual_mode, "reel") == 0) {
+    else if (strcmp(mode, "reelC") == 0) {
         process_reel(datafile, csvfile);
     }
     else {
