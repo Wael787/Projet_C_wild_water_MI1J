@@ -1,7 +1,7 @@
 #include "fuites.h"
 
 
- * FONCTIONS DE GESTION DES NŒUDS DE L'ARBRE DE DISTRIBUTION
+ //FONCTIONS DE GESTION DES NŒUDS DE L'ARBRE DE DISTRIBUTION
  
 
 Node *create_node(const char *identifier, double leak_percentage) {
@@ -58,7 +58,7 @@ void free_tree(Node *root) {
 }
 
 
- * FONCTIONS DE GESTION DE L'AVL
+ //FONCTIONS DE GESTION DE L'AVL
  
 
 AVLNode *create_avl_node(const char *identifier, Node *data_node) {
@@ -191,7 +191,7 @@ void free_avl(AVLNode *root) {
 }
 
 
- * FONCTIONS DE CALCUL
+//FONCTIONS DE CALCUL
  
 
 void calculate_volumes(Node *node, double parent_volume, int num_siblings) {
@@ -243,7 +243,7 @@ double calculate_total_leaks(Node *node) {
 }
 
 
- * FONCTIONS UTILITAIRES
+//FONCTIONS UTILITAIRES
 
 
 char *duplicate_string(const char *str) {
