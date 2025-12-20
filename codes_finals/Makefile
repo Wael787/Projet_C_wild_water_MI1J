@@ -15,7 +15,7 @@ histo: $(SRCDIR)/histo.c | $(BINDIR)
 	$(CC) $(CFLAGS) -o $(BINDIR)/histo $(SRCDIR)/histo.c
 
 # Compilation de leaks (si vous avez ce fichier)
-leaks: $(SRCDIR)/leaks.c | $(BINDIR)
+leaks: $(SRCDIR)/fuites.c | $(BINDIR)
 	$(CC) $(CFLAGS) -o $(BINDIR)/leaks $(SRCDIR)/leaks.c
 
 # Nettoyage
