@@ -23,6 +23,9 @@ Comment executer notre programme ?
   HISTOGRAMMES (volume pour les histo = en k.m^3.an^-1 car plus judicieux, 
   le volume etait arrondi à 1 d'unité en M.m^3.an^-1 ,  ce qui n'était pas pertinent pour l'analyse des données)
 
+  On a réalisé les histogrammes de deux manières différentes, une en Shell et une en C, afin de comparer leurs performances d’exécution.
+  Les 2 fonctionnent ( sauf petite limitation pour la génération de l'histogramme "histo max" avec le Shell mais non prise en compte )
+
     ./MyScript.sh c-wildwater_v3.dat histo max     # Capacité maximale (Shell/AWK)
     ./MyScript.sh c-wildwater_v3.dat histo src     # Volume capté (Shell/AWK)
     ./MyScript.sh c-wildwater_v3.dat histo reel    # Volume traité (Shell/AWK)
@@ -30,6 +33,9 @@ Comment executer notre programme ?
     ./MyScript.sh c-wildwater_v3.dat histo maxC    # Capacité maximale (C/AVL)
     ./MyScript.sh c-wildwater_v3.dat histo srcC    # Volume capté (C/AVL)
     ./MyScript.sh c-wildwater_v3.dat histo reelC   # Volume traité (C/AVL)
+
+  La version en langage C a donc été privilégiée pour le traitement final, car elle est plus efficace sur des fichiers de grande taille et repose sur des structures de données adaptées.
+  Cette approche permet de respecter les exigences du projet tout en mettant en évidence les différences de performances entre les deux solutions.
   
   CALCUL DES FUITES (unité : M.m^3.an^-1) : on a choisi de partir du volume max traité par l'usine et non du volume réellement traité (en prenant en compte les fuites de la source à l'usine)
     ./MyScript.sh c-wildwater_v3.dat leaks
