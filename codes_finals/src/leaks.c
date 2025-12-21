@@ -427,7 +427,7 @@ int main(int argc, char *argv[]) {
         return 3;
     }
     
-    fprintf(sortie, "identifier;Leak volume (M.m3.year-1)\n");
+    fprintf(sortie, "identifiant;Leak volume (M.m3.year-1)\n");
     fprintf(sortie, "%s;%.6f\n", id_usine, fuites_totales_Mm3);
     fclose(sortie);
     
