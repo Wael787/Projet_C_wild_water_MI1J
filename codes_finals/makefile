@@ -1,24 +1,22 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -O2 -std=c99
-BINDIR = bin
-SRCDIR = .
+# version finale
+# date : 21/12/2025
 
-# Créer le répertoire bin s'il n'existe pas
+CC = gcc
+CFLAGS = -Wall -Wextra -O2
+BINDIR = bin
+SRCDIR = src
+
 $(BINDIR):
 	mkdir -p $(BINDIR)
 
-# Cible par défaut
-all: histo
+all: histo leaks
 
-# Compilation de histo
 histo: $(SRCDIR)/histo.c | $(BINDIR)
 	$(CC) $(CFLAGS) -o $(BINDIR)/histo $(SRCDIR)/histo.c
 
-# Compilation de leaks (si vous avez ce fichier)
-leaks: $(SRCDIR)/fuites.c | $(BINDIR)
+leaks: $(SRCDIR)/leaks.c | $(BINDIR)
 	$(CC) $(CFLAGS) -o $(BINDIR)/leaks $(SRCDIR)/leaks.c
 
-# Nettoyage
 clean:
 	rm -rf $(BINDIR)
 
