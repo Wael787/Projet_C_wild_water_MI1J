@@ -1,6 +1,9 @@
 #ifndef LEAKS_H
 #define LEAKS_H
 
+// version finale
+// date : 21/12/2025
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +11,7 @@
 #define MAX_LONGUEUR_LIGNE 1024
 #define MAX_LONGUEUR_ID 256
 
-// Structure pour un nœud de l'arbre de distribution 
+/* Structure pour un nœud de l'arbre de distribution */
 typedef struct Noeud {
     char *identifiant;              
     double volume;                 
@@ -18,7 +21,7 @@ typedef struct Noeud {
     int capacite_enfants;         
 } Noeud;
 
-// Structure pour un nœud AVL 
+/* Structure pour un nœud AVL */
 typedef struct NoeudAVL {
     char *identifiant;
     Noeud *noeud_donnees;
@@ -27,12 +30,12 @@ typedef struct NoeudAVL {
     int hauteur;
 } NoeudAVL;
 
-// Gestion de l'arbre de distribution 
+/* Gestion de l'arbre de distribution */
 Noeud *creerNoeud(const char *identifiant, double pourcentage_fuite);
 void ajouterEnfant(Noeud *parent, Noeud *enfant);
 void libererArbre(Noeud *racine);
 
-// Gestion de l'AVL 
+/* Gestion de l'AVL */
 NoeudAVL *creerNoeudAVL(const char *identifiant, Noeud *noeud_donnees);
 int hauteurAVL(NoeudAVL *noeud);
 int maxAVL(int a, int b);
@@ -43,11 +46,11 @@ NoeudAVL *insererAVL(NoeudAVL *racine, const char *identifiant, Noeud *noeud_don
 Noeud *rechercherAVL(NoeudAVL *racine, const char *identifiant);
 void libererAVL(NoeudAVL *racine);
 
-// Calcul des volumes et fuites 
+/* Calcul des volumes et fuites */
 void calculerVolumes(Noeud *noeud, double volume_parent, int nb_freres);
 double calculerFuitesTotales(Noeud *noeud);
 
-// Fonctions utilitaires 
+/* Fonctions utilitaires */
 int analyserLigneCSV(char *ligne, char *col1, char *col2, char *col3, char *col4, char *col5);
 char *nettoyerEspaces(char *str);
 char *dupliquerChaine(const char *str);
