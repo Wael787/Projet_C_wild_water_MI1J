@@ -1,1 +1,46 @@
+PROJET DISTRIBUTION D'EAU
 
+Objectif du projet :
+  
+  Ce projet a pour but d'analyser des données provenant d'un système de distribution d'eau en France à partir d'un fichier CSV représentant environ 1/3 du réseau français.
+  Il a pour but de filtrer et traiter les données au moyen d’un script shell, d’un programme écrit en langage C et d'un Gnuplot pour la visualisation graphique.
+  Ce projet a également pour but de :
+    1.Générer les histogrammes des performances des usines de traitement (capacité maximale, volumes captés, volumes traités)
+    2.Calculer les fuites d'eau dans le réseau aval d'une usine spécifique
+
+Les données suivent le parcours : 
+Sources → Usines de traitement → Stockages → Jonctions → Raccordements → Usagers
+
+Comment executer notre programme ?
+  PRÉPARATION :
+    cd /chemin/vers/c-wildwater 
+    chmod +x MyScript.sh (Mettre les autorisations)         
+
+  COMPILATION :
+    make all          # Compile tout (ou compilation automatique au lancement)
+    make clean        # Nettoie les binaires
+
+  HISTOGRAMMES (unité : k.m³.an⁻¹) :
+    ./MyScript.sh c-wildwater_v3.dat histo max     # Capacité maximale 
+    ./MyScript.sh c-wildwater_v3.dat histo src     # Volume capté 
+    ./MyScript.sh c-wildwater_v3.dat histo real    # Volume traité
+
+  CALCUL DES FUITES (unité : M.m³.year⁻¹) :
+    ./MyScript.sh c-wildwater_v3.dat leaks 
+    
+    Tester une usine précise :
+    ./wildwater leak c-wildwater_v3.dat ID_USINE
+
+Structure du projet :
+c-wildwater/
+├── MyScript.sh          # Script shell principal
+├── makefile             # Compilation automatique
+├── src/
+│   ├── histo.c         # Programme histogrammes
+│   ├── histo.h
+│   ├── leaks.c         # Programme calcul des fuites
+│   └── leaks.h
+├── dat/
+│   └── c-wildwater_v3.dat  # Données d'entrée
+├── csv/                # Fichiers de sortie générés
+└── bin/                # Exécutables compilés
