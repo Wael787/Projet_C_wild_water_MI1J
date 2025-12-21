@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # Vérification des Paramètres
 if [ $# -lt 2 ]; then
     echo "Usage :"
