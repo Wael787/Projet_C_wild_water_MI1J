@@ -1,32 +1,66 @@
 #ifndef HISTO_H
 #define HISTO_H
 
+// verison finale
+// date 21/12/2025
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
-#define MAX_LINE 2048
-#define MAX_ENTRIES 1000
+/* Constantes de dimensionnement */
+#define MAX_LIGNE 2048
+#define MAX_NOEUDS 10000
 
-// Structure pour stocker les données
-typedef struct {
-    char nom[300];
+/* Nœud d'arbre AVL pour stocker identifiants et volumes */
+typedef struct Noeud {
+    char* id;
     double volume;
-} Donnee;
+    int hauteur;
+    struct Noeud* gauche;
+    struct Noeud* droit;
+} Noeud;
 
-// Variables globales
-extern Donnee tab[MAX_ENTRIES];
-extern int nb;
+typedef Noeud* pNoeud;
 
-// Fonctions utilitaires
-void nettoyer(char* s);
-int chercher(char* nom);
-void ajouter(char* nom, double vol);
-int comparer(const void* a, const void* b);
+/* Élément extrait de l'AVL pour tri et export */
+typedef struct {
+    char id[256];
+    double volume;
+} Element;
 
-// Fonctions de traitement (retournent 0 si succès, 1 si erreur)
-int mode_max(char* fichier_entree, char* fichier_sortie);
-int mode_src(char* fichier_entree, char* fichier_sortie);
-int mode_reel(char* fichier_entree, char* fichier_sortie);
+/* GESTION AVL */
 
-#endif
+int hauteur(pNoeud n);
+int max(int a, int b);
+int equilibre(pNoeud n);
+
+pNoeud creerNoeud(const char* id, double vol);
+void libererAVL(pNoeud r);
+
+pNoeud rotationDroite(pNoeud y);
+pNoeud rotationGauche(pNoeud x);
+
+pNoeud insererAVL(pNoeud racine, const char* id, double vol);
+
+void convertirAVL(pNoeud r, Element* tab, int* idx);
+
+/* TRI ET ANALYSE */
+
+int comparerDecroissant(const void* a, const void* b);
+int comparerId(const void* a, const void* b);
+
+void nettoyer(char* str);
+int estTiret(const char* s);
+int nonTiret(const char* s);
+
+int analyserLigne(char* ligne, char* champs[], int max_champs);
+
+/* TRAITEMENT DES MODES */
+
+void traiterMax(const char* fichier_donnees, const char* fichier_csv);
+void traiterSource(const char* fichier_donnees, const char* fichier_csv);
+void traiterReel(const char* fichier_donnees, const char* fichier_csv);
+
+#endif /* HISTO_H */
