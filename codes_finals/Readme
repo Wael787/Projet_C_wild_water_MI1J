@@ -20,7 +20,9 @@ Comment executer notre programme ?
     make all          # Compile tout (ou compilation automatique au lancement)
     make clean        # Nettoie les binaires
 
-  HISTOGRAMMES (unité : k.m³.an⁻¹) :
+  HISTOGRAMMES (volume pour les histo = en k.m^3.an^-1 car plus judicieux, 
+  le volume etait arrondi à 1 d'unité en M.m^3.an^-1 ,  ce qui n'était pas pertinent pour l'analyse des données)
+
     ./MyScript.sh c-wildwater_v3.dat histo max     # Capacité maximale (Shell/AWK)
     ./MyScript.sh c-wildwater_v3.dat histo src     # Volume capté (Shell/AWK)
     ./MyScript.sh c-wildwater_v3.dat histo reel    # Volume traité (Shell/AWK)
@@ -29,7 +31,7 @@ Comment executer notre programme ?
     ./MyScript.sh c-wildwater_v3.dat histo srcC    # Volume capté (C/AVL)
     ./MyScript.sh c-wildwater_v3.dat histo reelC   # Volume traité (C/AVL)
   
-  CALCUL DES FUITES (unité : M.m³.an⁻¹) :
+  CALCUL DES FUITES (unité : M.m^3.an^-1) :
     ./MyScript.sh c-wildwater_v3.dat leaks
     
     Tester une usine précise :
