@@ -1,8 +1,8 @@
 #include "histo.h"
-// version finale
-// date 21/12/2025
-// GESTION AVL
- 
+
+// GESTION DE L'ARBRE AVL
+
+
 int hauteur(pNoeud n) {
     return (n == NULL) ? 0 : n->hauteur;
 }
@@ -11,11 +11,11 @@ int max(int a, int b) {
     return (a > b) ? a : b;
 }
 
-// Facteur d'équilibre : positif si déséquilibre à gauche, négatif à droite 
 int equilibre(pNoeud n) {
     return (n == NULL) ? 0 : hauteur(n->gauche) - hauteur(n->droit);
 }
 
+// Cree un nouveau noeud avec l'id et le volume
 pNoeud creerNoeud(const char* id, double vol) {
     pNoeud n = malloc(sizeof(Noeud));
     if (!n) {
@@ -35,6 +35,7 @@ pNoeud creerNoeud(const char* id, double vol) {
     return n;
 }
 
+// Liberation recursive de l'arbre
 void libererAVL(pNoeud r) {
     if (!r) return;
     libererAVL(r->gauche);
@@ -43,6 +44,7 @@ void libererAVL(pNoeud r) {
     free(r);
 }
 
+// Réequilibrage
 pNoeud rotationDroite(pNoeud y) {
     pNoeud x = y->gauche;
     pNoeud T2 = x->droit;
@@ -69,7 +71,8 @@ pNoeud rotationGauche(pNoeud x) {
     return y;
 }
 
-// Insertion dans l'AVL : cumule les volumes si l'ID existe déjà et maintient l'équilibre de l'arbre via rotations
+// Insert dans l'AVL en cumulant les volumes si l'ID existe deja et reequilibre si il faut
+
 pNoeud insererAVL(pNoeud racine, const char* id, double vol) {
     
     if (racine == NULL)
@@ -82,6 +85,7 @@ pNoeud insererAVL(pNoeud racine, const char* id, double vol) {
     else if (cmp > 0)
         racine->droit = insererAVL(racine->droit, id, vol);
     else {
+        // ID existe deja
         racine->volume += vol;
         return racine;
     }
@@ -101,6 +105,7 @@ pNoeud insererAVL(pNoeud racine, const char* id, double vol) {
         return rotationDroite(racine);
     }
 
+
     if (eq < -1 && strcmp(id, racine->droit->id) < 0) {
         racine->droit = rotationDroite(racine->droit);
         return rotationGauche(racine);
@@ -109,7 +114,7 @@ pNoeud insererAVL(pNoeud racine, const char* id, double vol) {
     return racine;
 }
 
-// Parcours infixe inversé (droit-racine-gauche) pour obtenir l'ordre alphabétique inverse 
+// Parcours droit-racine-gauche pour avoir l'ordre alphabetique inverse, remplit avec les elements de l'arbre
 void convertirAVL(pNoeud r, Element* tab, int* idx) {
     if (!r) return;
     convertirAVL(r->droit, tab, idx);
@@ -122,8 +127,9 @@ void convertirAVL(pNoeud r, Element* tab, int* idx) {
     convertirAVL(r->gauche, tab, idx);
 }
 
-// TRI
-
+//  FONCTIONS DE TRI
+  
+// Compare par volume decroissant (pour qsort)
 int comparerDecroissant(const void* a, const void* b) {
     double x = ((Element*)a)->volume;
     double y = ((Element*)b)->volume;
@@ -136,17 +142,20 @@ int comparerId(const void* a, const void* b) {
     return strcmp(((Element*)a)->id, ((Element*)b)->id);
 }
 
-// ANALYSE
+//  PARSING DU FICHIER
 
+// Enleve les espaces et retours à la ligne
 void nettoyer(char* str) {
     if (!str) return;
     
+    // pr les espaces fin
     char *fin = str + strlen(str) - 1;
     while (fin >= str && (*fin == '\n' || *fin == '\r' || *fin == ' ' || *fin == '\t')) {
         *fin = '\0';
         fin--;
     }
     
+    // pr les espaces debut
     char *debut = str;
     while (*debut && (*debut == ' ' || *debut == '\t')) {
         debut++;
@@ -157,6 +166,7 @@ void nettoyer(char* str) {
     }
 }
 
+// Verifie si c'est un champ vide
 int estTiret(const char* s) {
     if (!s) return 0;
     return (strcmp(s, "-") == 0);
@@ -167,6 +177,7 @@ int nonTiret(const char* s) {
     return (strcmp(s, "-") != 0);
 }
 
+// Decoupe une ligne CSV en champs separes par ';'
 int analyserLigne(char* ligne, char* champs[], int max_champs) {
     int compte = 0;
     char* ptr = ligne;
@@ -183,6 +194,7 @@ int analyserLigne(char* ligne, char* champs[], int max_champs) {
         ptr++;
     }
     
+    // dernier champ
     if (compte < max_champs && debut) {
         champs[compte] = debut;
         nettoyer(champs[compte]);
@@ -192,11 +204,11 @@ int analyserLigne(char* ligne, char* champs[], int max_champs) {
     return compte;
 }
 
-// TRAITEMENT DES MODES
+// mode max
 
-/* MODE MAX : génère histogramme des volumes max par usine
- * Filtre : seul le champs[3] est non-vide (différent de "-")
- * Sortie : Top 10 des usines max + top 50 des min usines */
+// Genere l'histogramme des volumes max par usine
+// On filtre les lignes avec seulement champs[1] et champs[3] non vides
+
 void traiterMax(const char* fichier_donnees, const char* fichier_csv) {
     FILE* entree = fopen(fichier_donnees, "r");
     if (!entree) {
@@ -210,19 +222,19 @@ void traiterMax(const char* fichier_donnees, const char* fichier_csv) {
     char ligne[MAX_LIGNE];
     int num_ligne = 0;
     
+    // Skip header
     if (fgets(ligne, sizeof(ligne), entree)) {
         num_ligne++;
     }
 
+    // Lecture et insertion dans l'AVL
     while (fgets(ligne, sizeof(ligne), entree)) {
         num_ligne++;
         
         char* champs[10] = {NULL};
         int nb_champs = analyserLigne(ligne, champs, 10);
 
-        if (nb_champs < 5) {
-            continue;
-        }
+        if (nb_champs < 5) continue;
 
         if (estTiret(champs[0]) && nonTiret(champs[1]) && estTiret(champs[2]) && 
             nonTiret(champs[3]) && estTiret(champs[4])) 
@@ -243,6 +255,7 @@ void traiterMax(const char* fichier_donnees, const char* fichier_csv) {
         return;
     }
 
+    // Conversion AVL en tableau pour le tri
     Element* tab = malloc(MAX_NOEUDS * sizeof(Element));
     if (!tab) {
         fprintf(stderr, "Erreur allocation mémoire\n");
@@ -254,6 +267,7 @@ void traiterMax(const char* fichier_donnees, const char* fichier_csv) {
     convertirAVL(racine, tab, &compte);
     qsort(tab, compte, sizeof(Element), comparerDecroissant);
 
+    // Ecriture du fichier CSV
     FILE* sortie = fopen(fichier_csv, "w");
     if (!sortie) {
         fprintf(stderr, "Erreur: impossible de créer '%s'\n", fichier_csv);
@@ -262,6 +276,7 @@ void traiterMax(const char* fichier_donnees, const char* fichier_csv) {
         exit(1);
     }
 
+    // Top 10 plus grandes
     fprintf(sortie, "=== Top 10 plus grandes usines ===\n");
     int limite = (compte < 10) ? compte : 10;
     fprintf(sortie, "identifier;max volume (k.m3.year-1)\n");
@@ -269,6 +284,7 @@ void traiterMax(const char* fichier_donnees, const char* fichier_csv) {
         fprintf(sortie, "%s;%.0f\n", tab[i].id, tab[i].volume);
     }
 
+    // Top 50 plus petites (on prend depuis la fin)
     fprintf(sortie, "\n=== Top 50 plus petites usines ===\n");
     int debut = (compte < 50) ? 0 : compte - 50;
     fprintf(sortie, "identifier;max volume (k.m3.year-1)\n");
@@ -283,9 +299,10 @@ void traiterMax(const char* fichier_donnees, const char* fichier_csv) {
     printf("Histogramme généré max : %s\n", fichier_csv);
 }
 
-/* MODE SRC : génère histogramme des volumes par source
- * Filtre : champs[0]=="-" sinon le reste est différent de "-"
- * Sortie : Top 10 max sources + top 50 min sources */
+// mode src
+
+// Genere l'histogramme des volumes par source
+// Le filtre est : toutes les colonnes sauf la premiere doivent etre non-vides
 void traiterSource(const char* fichier_donnees, const char* fichier_csv) {
     FILE* entree = fopen(fichier_donnees, "r");
     if (!entree) {
@@ -304,10 +321,12 @@ void traiterSource(const char* fichier_donnees, const char* fichier_csv) {
 
         if (nb_champs < 5) continue;
 
+        // Filtre : - / usine / source / volume / pourcent
         if (estTiret(champs[0]) && nonTiret(champs[1]) && nonTiret(champs[2]) && 
             nonTiret(champs[3]) && nonTiret(champs[4])) 
         {
             double vol = atof(champs[3]);
+            // On groupe par source (champs[2])
             racine = insererAVL(racine, champs[2], vol);
         }
     }
@@ -323,6 +342,7 @@ void traiterSource(const char* fichier_donnees, const char* fichier_csv) {
         return;
     }
 
+    // Meme logique que traiterMax
     Element* tab = malloc(MAX_NOEUDS * sizeof(Element));
     if (!tab) {
         fprintf(stderr, "Erreur allocation mémoire\n");
@@ -364,10 +384,10 @@ void traiterSource(const char* fichier_donnees, const char* fichier_csv) {
     printf("\n");
 }
 
-/* MODE REEL : génère histogramme des volumes réels par source
- * Calcul : volume_reel = volume × (100 - pourcentage) / 100
- * Filtre : le même que pour le mode SRC (car aussi des sources-usines)
- * Sortie : Top 10 max sources + top 50 min sources */
+// Mode réel
+
+// Calcul le volume reel en enlevant le pourcentage de fuite
+// volume_reel = volume × (100 - pourcent) / 100
 void traiterReel(const char* fichier_donnees, const char* fichier_csv) {
     FILE* entree = fopen(fichier_donnees, "r");
     if (!entree) {
@@ -391,6 +411,7 @@ void traiterReel(const char* fichier_donnees, const char* fichier_csv) {
             
             double volume = atof(champs[3]);
             double pourcentage = atof(champs[4]);
+            // Calcul du volume apres fuite
             double resultat = volume * (100.0 - pourcentage) / 100.0;
             racine = insererAVL(racine, champs[2], resultat);
         }
@@ -448,7 +469,8 @@ void traiterReel(const char* fichier_donnees, const char* fichier_csv) {
     printf("Nombre de sources: %d\n\n", compte);
 }
 
-// MAIN
+// Main
+
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
@@ -460,7 +482,7 @@ int main(int argc, char* argv[]) {
     char* fichier_donnees = argv[1];
     char* mode = argv[2];
 
-    // Suppression du 'C' final si présent 
+    // On enleve le 'C' à la fin pour avoir max/src/reel
     char mode_reel[32];
     strncpy(mode_reel, mode, sizeof(mode_reel) - 1);
     mode_reel[sizeof(mode_reel) - 1] = '\0';
@@ -470,9 +492,11 @@ int main(int argc, char* argv[]) {
         mode_reel[longueur - 1] = '\0';
     }
 
+    // Chemin du fichier de sortie
     char fichier_csv[512];
     snprintf(fichier_csv, sizeof(fichier_csv), "csv/histo_%s.csv", mode);
 
+    // Appel de la bonne fonction selon le mode
     if (strcmp(mode_reel, "max") == 0) {
         traiterMax(fichier_donnees, fichier_csv);
     }
