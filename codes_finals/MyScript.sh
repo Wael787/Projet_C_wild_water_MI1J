@@ -1,4 +1,5 @@
 #!/bin/bash
+# version finale
 
 
 # Vérification des Paramètres
