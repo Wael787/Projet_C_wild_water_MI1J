@@ -1,5 +1,6 @@
 #include "histo.h"
-
+// version finale
+// date 21/12/2025
 // GESTION AVL
  
 int hauteur(pNoeud n) {
@@ -12,7 +13,7 @@ int max(int a, int b) {
 
 // Facteur d'équilibre : positif si déséquilibre à gauche, négatif à droite 
 int equilibre(pNoeud n) {
-    return (n == NULL) ? 0 : hauteur(n->fg) - hauteur(n->fd);
+    return (n == NULL) ? 0 : hauteur(n->gauche) - hauteur(n->droit);
 }
 
 pNoeud creerNoeud(const char* id, double vol) {
@@ -29,50 +30,47 @@ pNoeud creerNoeud(const char* id, double vol) {
     }
     n->volume = vol;
     n->hauteur = 1;
-    n->fg = NULL;
-    n->fd = NULL;
+    n->gauche = NULL;
+    n->droit = NULL;
     return n;
 }
 
 void libererAVL(pNoeud r) {
     if (!r) return;
-    libererAVL(r->fg);
-    libererAVL(r->fd);
+    libererAVL(r->gauche);
+    libererAVL(r->droit);
     free(r->id);
     free(r);
 }
 
-
 pNoeud rotationDroite(pNoeud y) {
-    pNoeud x = y->fg;
-    pNoeud T2 = x->fd;
+    pNoeud x = y->gauche;
+    pNoeud T2 = x->droit;
 
-    x->fd = y;
-    y->fg = T2;
+    x->droit = y;
+    y->gauche = T2;
 
-    y->hauteur = max(hauteur(y->fg), hauteur(y->fd)) + 1;
-    x->hauteur = max(hauteur(x->fg), hauteur(x->fd)) + 1;
+    y->hauteur = max(hauteur(y->gauche), hauteur(y->droit)) + 1;
+    x->hauteur = max(hauteur(x->gauche), hauteur(x->droit)) + 1;
 
     return x;
 }
 
-
 pNoeud rotationGauche(pNoeud x) {
-    pNoeud y = x->fd;
-    pNoeud T2 = y->fg;
+    pNoeud y = x->droit;
+    pNoeud T2 = y->gauche;
 
-    y->fg = x;
-    x->fd = T2;
+    y->gauche = x;
+    x->droit = T2;
 
-    x->hauteur = max(hauteur(x->fg), hauteur(x->fd)) + 1;
-    y->hauteur = max(hauteur(y->fg), hauteur(y->fd)) + 1;
+    x->hauteur = max(hauteur(x->gauche), hauteur(x->droit)) + 1;
+    y->hauteur = max(hauteur(y->gauche), hauteur(y->droit)) + 1;
 
     return y;
 }
 
 // Insertion dans l'AVL : cumule les volumes si l'ID existe déjà et maintient l'équilibre de l'arbre via rotations
-
-pNoeud insertAVL(pNoeud racine, const char* id, double vol) {
+pNoeud insererAVL(pNoeud racine, const char* id, double vol) {
     
     if (racine == NULL)
         return creerNoeud(id, vol);
@@ -80,380 +78,374 @@ pNoeud insertAVL(pNoeud racine, const char* id, double vol) {
     int cmp = strcmp(id, racine->id);
 
     if (cmp < 0)
-        racine->fg = insertAVL(racine->fg, id, vol);
+        racine->gauche = insererAVL(racine->gauche, id, vol);
     else if (cmp > 0)
-        racine->fd = insertAVL(racine->fd, id, vol);
+        racine->droit = insererAVL(racine->droit, id, vol);
     else {
         racine->volume += vol;
         return racine;
     }
 
-    
-    racine->hauteur = 1 + max(hauteur(racine->fg), hauteur(racine->fd));
+    racine->hauteur = 1 + max(hauteur(racine->gauche), hauteur(racine->droit));
 
-    
     int eq = equilibre(racine);
 
-    if (eq > 1 && strcmp(id, racine->fg->id) < 0)
+    if (eq > 1 && strcmp(id, racine->gauche->id) < 0)
         return rotationDroite(racine);
 
-    if (eq < -1 && strcmp(id, racine->fd->id) > 0)
+    if (eq < -1 && strcmp(id, racine->droit->id) > 0)
         return rotationGauche(racine);
 
-    if (eq > 1 && strcmp(id, racine->fg->id) > 0) {
-        racine->fg = rotationGauche(racine->fg);
+    if (eq > 1 && strcmp(id, racine->gauche->id) > 0) {
+        racine->gauche = rotationGauche(racine->gauche);
         return rotationDroite(racine);
     }
 
-    if (eq < -1 && strcmp(id, racine->fd->id) < 0) {
-        racine->fd = rotationDroite(racine->fd);
+    if (eq < -1 && strcmp(id, racine->droit->id) < 0) {
+        racine->droit = rotationDroite(racine->droit);
         return rotationGauche(racine);
     }
 
     return racine;
 }
 
-// Parcours infixe inversé (droite-racine-gauche) pour obtenir l'ordre alphabétique inverse 
-
-void convertirAVL(pNoeud r, elem_t* tab, int* idx) {
+// Parcours infixe inversé (droit-racine-gauche) pour obtenir l'ordre alphabétique inverse 
+void convertirAVL(pNoeud r, Element* tab, int* idx) {
     if (!r) return;
-    convertirAVL(r->fd, tab, idx);
-    if (*idx < MAX_NODES) {
+    convertirAVL(r->droit, tab, idx);
+    if (*idx < MAX_NOEUDS) {
         strncpy(tab[*idx].id, r->id, sizeof(tab[*idx].id) - 1);
         tab[*idx].id[sizeof(tab[*idx].id) - 1] = '\0';
         tab[*idx].volume = r->volume;
         (*idx)++;
     }
-    convertirAVL(r->fg, tab, idx);
+    convertirAVL(r->gauche, tab, idx);
 }
 
 // TRI
 
-int cmp_desc(const void* a, const void* b) {
-    double x = ((elem_t*)a)->volume;
-    double y = ((elem_t*)b)->volume;
+int comparerDecroissant(const void* a, const void* b) {
+    double x = ((Element*)a)->volume;
+    double y = ((Element*)b)->volume;
     if (x > y) return -1;
     if (x < y) return 1;
     return 0;
 }
 
-int cmp_id(const void* a, const void* b) {
-    return strcmp(((elem_t*)a)->id, ((elem_t*)b)->id);
+int comparerId(const void* a, const void* b) {
+    return strcmp(((Element*)a)->id, ((Element*)b)->id);
 }
 
-// PARSING
+// ANALYSE
 
-void trim(char* str) {
+void nettoyer(char* str) {
     if (!str) return;
     
-    char *end = str + strlen(str) - 1;
-    while (end >= str && (*end == '\n' || *end == '\r' || *end == ' ' || *end == '\t')) {
-        *end = '\0';
-        end--;
+    char *fin = str + strlen(str) - 1;
+    while (fin >= str && (*fin == '\n' || *fin == '\r' || *fin == ' ' || *fin == '\t')) {
+        *fin = '\0';
+        fin--;
     }
     
-    char *start = str;
-    while (*start && (*start == ' ' || *start == '\t')) {
-        start++;
+    char *debut = str;
+    while (*debut && (*debut == ' ' || *debut == '\t')) {
+        debut++;
     }
     
-    if (start != str) {
-        memmove(str, start, strlen(start) + 1);
+    if (debut != str) {
+        memmove(str, debut, strlen(debut) + 1);
     }
 }
 
-int is_dash(const char* s) {
+int estTiret(const char* s) {
     if (!s) return 0;
     return (strcmp(s, "-") == 0);
 }
 
-int not_dash(const char* s) {
+int nonTiret(const char* s) {
     if (!s) return 0;
     return (strcmp(s, "-") != 0);
 }
 
-int parse_line(char* line, char* fields[], int max_fields) {
-    int count = 0;
-    char* ptr = line;
-    char* start = line;
+int analyserLigne(char* ligne, char* champs[], int max_champs) {
+    int compte = 0;
+    char* ptr = ligne;
+    char* debut = ligne;
     
-    while (*ptr && count < max_fields) {
+    while (*ptr && compte < max_champs) {
         if (*ptr == ';') {
             *ptr = '\0';
-            fields[count] = start;
-            trim(fields[count]);
-            count++;
-            start = ptr + 1;
+            champs[compte] = debut;
+            nettoyer(champs[compte]);
+            compte++;
+            debut = ptr + 1;
         }
         ptr++;
     }
     
-    if (count < max_fields && start) {
-        fields[count] = start;
-        trim(fields[count]);
-        count++;
+    if (compte < max_champs && debut) {
+        champs[compte] = debut;
+        nettoyer(champs[compte]);
+        compte++;
     }
     
-    return count;
+    return compte;
 }
 
 // TRAITEMENT DES MODES
 
-/* -MODE MAX : génère histogramme des volumes max par usine
- - Filtre : seul le champs[3]est non-vide (différent de "-")
- - Sortie : Top 10 des usines max + top 50 des min usines */
-
-void process_max(const char* datafile, const char* csvfile) {
-    FILE* fin = fopen(datafile, "r");
-    if (!fin) {
-        fprintf(stderr, "Erreur: impossible d'ouvrir '%s'\n", datafile);
+/* MODE MAX : génère histogramme des volumes max par usine
+ * Filtre : seul le champs[3] est non-vide (différent de "-")
+ * Sortie : Top 10 des usines max + top 50 des min usines */
+void traiterMax(const char* fichier_donnees, const char* fichier_csv) {
+    FILE* entree = fopen(fichier_donnees, "r");
+    if (!entree) {
+        fprintf(stderr, "Erreur: impossible d'ouvrir '%s'\n", fichier_donnees);
         exit(1);
     }
 
     printf("Génération Histogrammes pour les Usines\n");
 
     pNoeud racine = NULL;
-    char line[MAX_LINE];
-    int line_num = 0;
+    char ligne[MAX_LIGNE];
+    int num_ligne = 0;
     
-    if (fgets(line, sizeof(line), fin)) {
-        line_num++;
+    if (fgets(ligne, sizeof(ligne), entree)) {
+        num_ligne++;
     }
 
-    while (fgets(line, sizeof(line), fin)) {
-        line_num++;
+    while (fgets(ligne, sizeof(ligne), entree)) {
+        num_ligne++;
         
-        char* fields[10] = {NULL};
-        int field_count = parse_line(line, fields, 10);
+        char* champs[10] = {NULL};
+        int nb_champs = analyserLigne(ligne, champs, 10);
 
-        if (field_count < 5) {
+        if (nb_champs < 5) {
             continue;
         }
 
-        if (is_dash(fields[0]) && not_dash(fields[1]) && is_dash(fields[2]) && 
-            not_dash(fields[3]) && is_dash(fields[4])) 
+        if (estTiret(champs[0]) && nonTiret(champs[1]) && estTiret(champs[2]) && 
+            nonTiret(champs[3]) && estTiret(champs[4])) 
         {    
-            double vol = atof(fields[3]);
-            racine = insertAVL(racine, fields[1], vol);
+            double vol = atof(champs[3]);
+            racine = insererAVL(racine, champs[1], vol);
         }
     }
-    fclose(fin);
+    fclose(entree);
 
     if (racine == NULL) {
         fprintf(stderr, "Aucune donnée trouvée pour le mode max\n");
-        FILE* fout = fopen(csvfile, "w");
-        if (fout) {
-            fprintf(fout, "identifier;max volume (k.m3.year-1)\n");
-            fclose(fout);
+        FILE* sortie = fopen(fichier_csv, "w");
+        if (sortie) {
+            fprintf(sortie, "identifier;max volume (k.m3.year-1)\n");
+            fclose(sortie);
         }
         return;
     }
 
-    elem_t* tab = malloc(MAX_NODES * sizeof(elem_t));
+    Element* tab = malloc(MAX_NOEUDS * sizeof(Element));
     if (!tab) {
         fprintf(stderr, "Erreur allocation mémoire\n");
         libererAVL(racine);
         exit(1);
     }
 
-    int count = 0;
-    convertirAVL(racine, tab, &count);
-    qsort(tab, count, sizeof(elem_t), cmp_desc);
+    int compte = 0;
+    convertirAVL(racine, tab, &compte);
+    qsort(tab, compte, sizeof(Element), comparerDecroissant);
 
-    FILE* fout = fopen(csvfile, "w");
-    if (!fout) {
-        fprintf(stderr, "Erreur: impossible de créer '%s'\n", csvfile);
+    FILE* sortie = fopen(fichier_csv, "w");
+    if (!sortie) {
+        fprintf(stderr, "Erreur: impossible de créer '%s'\n", fichier_csv);
         free(tab);
         libererAVL(racine);
         exit(1);
     }
 
-    fprintf(fout, "=== Top 10 plus grandes usines ===\n");
-    int lim = (count < 10) ? count : 10;
-    fprintf(fout, "identifier;max volume (k.m3.year-1)\n");
-    for (int i = 0; i < lim; i++) {
-        fprintf(fout, "%s;%.0f\n", tab[i].id, tab[i].volume);
+    fprintf(sortie, "=== Top 10 plus grandes usines ===\n");
+    int limite = (compte < 10) ? compte : 10;
+    fprintf(sortie, "identifier;max volume (k.m3.year-1)\n");
+    for (int i = 0; i < limite; i++) {
+        fprintf(sortie, "%s;%.0f\n", tab[i].id, tab[i].volume);
     }
 
-    fprintf(fout, "\n=== Top 50 plus petites usines ===\n");
-    int start = (count < 50) ? 0 : count - 50;
-    fprintf(fout, "identifier;max volume (k.m3.year-1)\n");
-    for (int i = count - 1; i >= start; i--) {
-        fprintf(fout, "%s;%.0f\n", tab[i].id, tab[i].volume);
+    fprintf(sortie, "\n=== Top 50 plus petites usines ===\n");
+    int debut = (compte < 50) ? 0 : compte - 50;
+    fprintf(sortie, "identifier;max volume (k.m3.year-1)\n");
+    for (int i = compte - 1; i >= debut; i--) {
+        fprintf(sortie, "%s;%.0f\n", tab[i].id, tab[i].volume);
     }
 
-    fclose(fout);
+    fclose(sortie);
     free(tab);
     libererAVL(racine);
 
-    printf("Histogramme généré max : %s\n", csvfile);
+    printf("Histogramme généré max : %s\n", fichier_csv);
 }
 
 /* MODE SRC : génère histogramme des volumes par source
  * Filtre : champs[0]=="-" sinon le reste est différent de "-"
- * Sortie : Top 10 max usines + top 50 min usines */
-
-void process_src(const char* datafile, const char* csvfile) {
-    FILE* fin = fopen(datafile, "r");
-    if (!fin) {
-        fprintf(stderr, "Erreur: impossible d'ouvrir '%s'\n", datafile);
+ * Sortie : Top 10 max sources + top 50 min sources */
+void traiterSource(const char* fichier_donnees, const char* fichier_csv) {
+    FILE* entree = fopen(fichier_donnees, "r");
+    if (!entree) {
+        fprintf(stderr, "Erreur: impossible d'ouvrir '%s'\n", fichier_donnees);
         exit(1);
     }
 
     printf("Génération Histogrammes pour les Sources\n\n");
 
     pNoeud racine = NULL;
-    char line[MAX_LINE];
+    char ligne[MAX_LIGNE];
     
-    while (fgets(line, sizeof(line), fin)) {
-        char* fields[10] = {NULL};
-        int field_count = parse_line(line, fields, 10);
+    while (fgets(ligne, sizeof(ligne), entree)) {
+        char* champs[10] = {NULL};
+        int nb_champs = analyserLigne(ligne, champs, 10);
 
-        if (field_count < 5) continue;
+        if (nb_champs < 5) continue;
 
-        if (is_dash(fields[0]) && not_dash(fields[1]) && not_dash(fields[2]) && 
-            not_dash(fields[3]) && not_dash(fields[4])) 
+        if (estTiret(champs[0]) && nonTiret(champs[1]) && nonTiret(champs[2]) && 
+            nonTiret(champs[3]) && nonTiret(champs[4])) 
         {
-            double vol = atof(fields[3]);
-            racine = insertAVL(racine, fields[2], vol);
+            double vol = atof(champs[3]);
+            racine = insererAVL(racine, champs[2], vol);
         }
     }
-    fclose(fin);
+    fclose(entree);
 
     if (racine == NULL) {
         fprintf(stderr, "Aucune donnée trouvée pour le mode src\n");
-        FILE* fout = fopen(csvfile, "w");
-        if (fout) {
-            fprintf(fout, "identifier;source volume (k.m3.year-1)\n");
-            fclose(fout);
+        FILE* sortie = fopen(fichier_csv, "w");
+        if (sortie) {
+            fprintf(sortie, "identifier;source volume (k.m3.year-1)\n");
+            fclose(sortie);
         }
         return;
     }
 
-    elem_t* tab = malloc(MAX_NODES * sizeof(elem_t));
+    Element* tab = malloc(MAX_NOEUDS * sizeof(Element));
     if (!tab) {
         fprintf(stderr, "Erreur allocation mémoire\n");
         libererAVL(racine);
         exit(1);
     }
 
-    int count = 0;
-    convertirAVL(racine, tab, &count);
-    qsort(tab, count, sizeof(elem_t), cmp_desc);
+    int compte = 0;
+    convertirAVL(racine, tab, &compte);
+    qsort(tab, compte, sizeof(Element), comparerDecroissant);
 
-    FILE* fout = fopen(csvfile, "w");
-    if (!fout) {
-        fprintf(stderr, "Erreur: impossible de créer '%s'\n", csvfile);
+    FILE* sortie = fopen(fichier_csv, "w");
+    if (!sortie) {
+        fprintf(stderr, "Erreur: impossible de créer '%s'\n", fichier_csv);
         free(tab);
         libererAVL(racine);
         exit(1);
     }
 
-    fprintf(fout, "=== Top 10 plus grandes sources ===\n");
-    int lim = (count < 10) ? count : 10;
-    fprintf(fout, "identifier;source volume (k.m3.year-1)\n");
-    for (int i = 0; i < lim; i++) {
-        fprintf(fout, "%s;%.0f\n", tab[i].id, tab[i].volume);
+    fprintf(sortie, "=== Top 10 plus grandes sources ===\n");
+    int limite = (compte < 10) ? compte : 10;
+    fprintf(sortie, "identifier;source volume (k.m3.year-1)\n");
+    for (int i = 0; i < limite; i++) {
+        fprintf(sortie, "%s;%.0f\n", tab[i].id, tab[i].volume);
     }
 
-    fprintf(fout, "\n=== Top 50 plus petites sources ===\n");
-    int start = (count < 50) ? 0 : count - 50;
-    fprintf(fout, "identifier;source volume (k.m3.year-1)\n");
-    for (int i = count - 1; i >= start; i--) {
-        fprintf(fout, "%s;%.0f\n", tab[i].id, tab[i].volume);
+    fprintf(sortie, "\n=== Top 50 plus petites sources ===\n");
+    int debut = (compte < 50) ? 0 : compte - 50;
+    fprintf(sortie, "identifier;source volume (k.m3.year-1)\n");
+    for (int i = compte - 1; i >= debut; i--) {
+        fprintf(sortie, "%s;%.0f\n", tab[i].id, tab[i].volume);
     }
 
-    fclose(fout);
+    fclose(sortie);
     free(tab);
     libererAVL(racine);
 
-    printf("Histogramme généré src : %s\n", csvfile);
+    printf("Histogramme généré src : %s\n", fichier_csv);
     printf("\n");
 }
 
 /* MODE REEL : génère histogramme des volumes réels par source
  * Calcul : volume_reel = volume × (100 - pourcentage) / 100
  * Filtre : le même que pour le mode SRC (car aussi des sources-usines)
- * Sortie : Top 10 max usines + top 50 min usines */
-
-void process_reel(const char* datafile, const char* csvfile) {
-    FILE* fin = fopen(datafile, "r");
-    if (!fin) {
-        fprintf(stderr, "Erreur: impossible d'ouvrir '%s'\n", datafile);
+ * Sortie : Top 10 max sources + top 50 min sources */
+void traiterReel(const char* fichier_donnees, const char* fichier_csv) {
+    FILE* entree = fopen(fichier_donnees, "r");
+    if (!entree) {
+        fprintf(stderr, "Erreur: impossible d'ouvrir '%s'\n", fichier_donnees);
         exit(1);
     }
 
     printf("Génération Histogrammes pour les Réels\n\n");
 
     pNoeud racine = NULL;
-    char line[MAX_LINE];
+    char ligne[MAX_LIGNE];
     
-    while (fgets(line, sizeof(line), fin)) {
-        char* fields[10] = {NULL};
-        int field_count = parse_line(line, fields, 10);
+    while (fgets(ligne, sizeof(ligne), entree)) {
+        char* champs[10] = {NULL};
+        int nb_champs = analyserLigne(ligne, champs, 10);
 
-        if (field_count < 5) continue;
+        if (nb_champs < 5) continue;
 
-        if (is_dash(fields[0]) && not_dash(fields[1]) && not_dash(fields[2]) && 
-            not_dash(fields[3]) && not_dash(fields[4])) {
+        if (estTiret(champs[0]) && nonTiret(champs[1]) && nonTiret(champs[2]) && 
+            nonTiret(champs[3]) && nonTiret(champs[4])) {
             
-            double volume = atof(fields[3]);
-            double percentage = atof(fields[4]);
-            double result = volume * (100.0 - percentage) / 100.0;
-            racine = insertAVL(racine, fields[2], result);
+            double volume = atof(champs[3]);
+            double pourcentage = atof(champs[4]);
+            double resultat = volume * (100.0 - pourcentage) / 100.0;
+            racine = insererAVL(racine, champs[2], resultat);
         }
     }
-    fclose(fin);
+    fclose(entree);
 
     if (racine == NULL) {
         fprintf(stderr, "Aucune donnée trouvée pour le mode reel\n");
-        FILE* fout = fopen(csvfile, "w");
-        if (fout) {
-            fprintf(fout, "identifier;real volume (k.m3.year-1)\n");
-            fclose(fout);
+        FILE* sortie = fopen(fichier_csv, "w");
+        if (sortie) {
+            fprintf(sortie, "identifier;real volume (k.m3.year-1)\n");
+            fclose(sortie);
         }
         return;
     }
 
-    elem_t* tab = malloc(MAX_NODES * sizeof(elem_t));
+    Element* tab = malloc(MAX_NOEUDS * sizeof(Element));
     if (!tab) {
         fprintf(stderr, "Erreur allocation mémoire\n");
         libererAVL(racine);
         exit(1);
     }
 
-    int count = 0;
-    convertirAVL(racine, tab, &count);
-    qsort(tab, count, sizeof(elem_t), cmp_desc);
+    int compte = 0;
+    convertirAVL(racine, tab, &compte);
+    qsort(tab, compte, sizeof(Element), comparerDecroissant);
 
-    FILE* fout = fopen(csvfile, "w");
-    if (!fout) {
-        fprintf(stderr, "Erreur: impossible de créer '%s'\n", csvfile);
+    FILE* sortie = fopen(fichier_csv, "w");
+    if (!sortie) {
+        fprintf(stderr, "Erreur: impossible de créer '%s'\n", fichier_csv);
         free(tab);
         libererAVL(racine);
         exit(1);
     }
 
-    fprintf(fout, "=== Top 10 plus grandes sources (volume réel) ===\n");
-    int lim = (count < 10) ? count : 10;
-    fprintf(fout, "identifier;real volume (k.m3.year-1)\n");
-    for (int i = 0; i < lim; i++) {
-        fprintf(fout, "%s;%.2f\n", tab[i].id, tab[i].volume);
+    fprintf(sortie, "=== Top 10 plus grandes sources (volume réel) ===\n");
+    int limite = (compte < 10) ? compte : 10;
+    fprintf(sortie, "identifier;real volume (k.m3.year-1)\n");
+    for (int i = 0; i < limite; i++) {
+        fprintf(sortie, "%s;%.2f\n", tab[i].id, tab[i].volume);
     }
 
-    fprintf(fout, "\n=== Top 50 plus petites sources (volume réel) ===\n");
-    int start = (count < 50) ? 0 : count - 50;
-    fprintf(fout, "identifier;real volume (k.m3.year-1)\n");
-    for (int i = count - 1; i >= start; i--) {
-        fprintf(fout, "%s;%.2f\n", tab[i].id, tab[i].volume);
+    fprintf(sortie, "\n=== Top 50 plus petites sources (volume réel) ===\n");
+    int debut = (compte < 50) ? 0 : compte - 50;
+    fprintf(sortie, "identifier;real volume (k.m3.year-1)\n");
+    for (int i = compte - 1; i >= debut; i--) {
+        fprintf(sortie, "%s;%.2f\n", tab[i].id, tab[i].volume);
     }
 
-    fclose(fout);
+    fclose(sortie);
     free(tab);
     libererAVL(racine);
 
-    printf("Histogramme généré reel : %s\n", csvfile);
-    printf("Nombre de sources: %d\n\n", count);
+    printf("Histogramme généré reel : %s\n", fichier_csv);
+    printf("Nombre de sources: %d\n\n", compte);
 }
 
 // MAIN
@@ -461,35 +453,34 @@ void process_reel(const char* datafile, const char* csvfile) {
 int main(int argc, char* argv[]) {
     if (argc < 3) {
         fprintf(stderr, "Usage:\n");
-        fprintf(stderr, "  %s <file.dat> {maxC|srcC|reelC}\n", argv[0]);
+        fprintf(stderr, "  %s <fichier.dat> {maxC|srcC|reelC}\n", argv[0]);
         return 1;
     }
 
-    char* datafile = argv[1];
+    char* fichier_donnees = argv[1];
     char* mode = argv[2];
 
     // Suppression du 'C' final si présent 
+    char mode_reel[32];
+    strncpy(mode_reel, mode, sizeof(mode_reel) - 1);
+    mode_reel[sizeof(mode_reel) - 1] = '\0';
     
-    char actual_mode[32];
-    strncpy(actual_mode, mode, sizeof(actual_mode) - 1);
-    actual_mode[sizeof(actual_mode) - 1] = '\0';
-    
-    size_t len = strlen(actual_mode);
-    if (len > 0 && actual_mode[len - 1] == 'C') {
-        actual_mode[len - 1] = '\0';
+    size_t longueur = strlen(mode_reel);
+    if (longueur > 0 && mode_reel[longueur - 1] == 'C') {
+        mode_reel[longueur - 1] = '\0';
     }
 
-    char csvfile[512];
-    snprintf(csvfile, sizeof(csvfile), "csv/histo_%s.csv", mode);
+    char fichier_csv[512];
+    snprintf(fichier_csv, sizeof(fichier_csv), "csv/histo_%s.csv", mode);
 
-    if (strcmp(actual_mode, "max") == 0) {
-        process_max(datafile, csvfile);
+    if (strcmp(mode_reel, "max") == 0) {
+        traiterMax(fichier_donnees, fichier_csv);
     }
-    else if (strcmp(actual_mode, "src") == 0) {
-        process_src(datafile, csvfile);
+    else if (strcmp(mode_reel, "src") == 0) {
+        traiterSource(fichier_donnees, fichier_csv);
     }
-    else if (strcmp(actual_mode, "reel") == 0) {
-        process_reel(datafile, csvfile);
+    else if (strcmp(mode_reel, "reel") == 0) {
+        traiterReel(fichier_donnees, fichier_csv);
     }
     else {
         fprintf(stderr, "Mode inconnu: %s\n", mode);
