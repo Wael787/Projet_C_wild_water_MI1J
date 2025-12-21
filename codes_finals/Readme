@@ -33,7 +33,7 @@ Comment executer notre programme ?
     ./MyScript.sh c-wildwater_v3.dat leaks
     
     Tester une usine précise :
-    ./wildwater leak c-wildwater_v3.dat "ID_USINE"
+    ./wildwater c-wildwater_v3.dat leaks "ID_USINE"
 
 Structure du projet :
 c-wildwater/
