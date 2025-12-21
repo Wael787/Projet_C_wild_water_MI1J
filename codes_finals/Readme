@@ -50,3 +50,25 @@ c-wildwater/
 │   └── c-wildwater_v3.dat  # Données d'entrée
 ├── csv/                # Fichiers de sortie générés
 └── bin/                # Exécutables compilés
+
+Note importante sur l'emplacement des fichiers
+
+Si vous exécutez ce projet sur un environnement virtuel (VM), un conteneur Docker ou un serveur distant et que vous souhaitez consulter les résultats (images ou tableaux) sur votre machine hôte (votre PC personnel), les fichiers ne seront pas directement accessibles via votre explorateur de fichiers habituel.
+
+Dans ce cas, vous devez effectuer une copie (cp) des fichiers vers votre dossier partagé ou local.
+
+Exemple de commande pour récupérer les images : Si vous avez un dossier partagé monté sur /mnt/c/Users/Moi/Desktop (cas fréquent sous WSL) ou un dossier partage :
+
+- Copier tous les graphiques vers votre dossier personnel
+cp png/*.png /chemin/vers/votre/dossier/personnel/
+
+-Copier tous les rapports CSV
+cp csv/*.csv /chemin/vers/votre/dossier/personnel/
+
+Si vous êtes sur une machine locale standard (Linux natif), les fichiers sont simplement dans les dossiers csv et png du répertoire courant.
+
+
+Nettoyage
+
+Pour supprimer les exécutables et nettoyer le projet (ne supprime pas les résultats csv/png) :
+make clean
