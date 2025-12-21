@@ -134,13 +134,13 @@ NoeudAVL *insererAVL(NoeudAVL *racine, const char *identifiant, Noeud *noeud_don
         return racine;
     }
     
-    // Mise à jour de la hauteur 
+    /* Mise à jour de la hauteur */
     racine->hauteur = 1 + maxAVL(hauteurAVL(racine->gauche), hauteurAVL(racine->droit));
     
-    // Calcul du facteur d'équilibre 
+    /* Calcul du facteur d'équilibre */
     int equilibre = facteurEquilibreAVL(racine);
     
-    // Cas de déséquilibre 
+    /* Cas de déséquilibre */
     if (equilibre > 1 && strcmp(identifiant, racine->gauche->identifiant) < 0) {
         return rotationDroiteAVL(racine);
     }
@@ -199,7 +199,7 @@ void calculerVolumes(Noeud *noeud, double volume_parent, int nb_freres) {
         noeud->volume = volume_parent * (100.0 - noeud->pourcentage_fuite) / 100.0;
     }
     
-    // Propagation récursive aux enfants 
+    /* Propagation récursive aux enfants */
     for (int i = 0; i < noeud->nb_enfants; i++) {
         calculerVolumes(noeud->enfants[i], noeud->volume, noeud->nb_enfants);
     }
@@ -250,7 +250,7 @@ char *nettoyerEspaces(char *str) {
     
     if (*str == 0) return str;
     
-    // Suppression des espaces à la fin 
+    /* Suppression des espaces à la fin */
     char *fin = str + strlen(str) - 1;
     while (fin > str && (*fin == ' ' || *fin == '\t' || *fin == '\n' || *fin == '\r')) {
         fin--;
@@ -264,17 +264,17 @@ int analyserLigneCSV(char *ligne, char *col1, char *col2, char *col3, char *col4
     char *token;
     int indice_col = 0;
     
-    // Initialisation des colonnes avec "-" 
+    /* Initialisation des colonnes avec "-" */
     strcpy(col1, "-");
     strcpy(col2, "-");
     strcpy(col3, "-");
     strcpy(col4, "-");
     strcpy(col5, "-");
     
-    // Suppression du retour à la ligne 
+    /* Suppression du retour à la ligne */
     ligne[strcspn(ligne, "\r\n")] = 0;
     
-    // Parse des colonnes séparées par ';'
+    /* Parse des colonnes séparées par ';' */
     token = strtok(ligne, ";");
     while (token != NULL && indice_col < 5) {
         token = nettoyerEspaces(token);
@@ -307,14 +307,14 @@ int main(int argc, char *argv[]) {
     const char *fichier_sortie = argv[2];
     const char *id_usine = argv[3];
     
-    // Ouverture du fichier de données 
+    /* Ouverture du fichier de données */
     FILE *fp = fopen(fichier_donnees, "r");
     if (!fp) {
         fprintf(stderr, "Erreur: Impossible d'ouvrir le fichier %s\n", fichier_donnees);
         return 2;
     }
     
-    // Structures de données 
+    /* Structures de données */
     NoeudAVL *racine_avl = NULL;
     Noeud **racines_stockage = NULL;
     int nb_stockages = 0;
@@ -327,11 +327,11 @@ int main(int argc, char *argv[]) {
     double volume_traite_total = 0.0;
     int usine_trouvee = 0;
     
-    // Phase 1: Calcul du volume total traité par l'usine 
+    /* Phase 1: Calcul du volume total traité par l'usine */
     while (fgets(ligne, sizeof(ligne), fp)) {
         analyserLigneCSV(ligne, col1, col2, col3, col4, col5);
         
-        // SOURCE → USINE 
+        /* SOURCE ? USINE */
         if (strcmp(col1, "-") == 0 && strcmp(col3, id_usine) == 0 && strcmp(col4, "-") != 0) {
             usine_trouvee = 1;
             double volume_source = atof(col4);
@@ -341,7 +341,7 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    // Si l'usine n'est pas trouvée, retourner -1 
+    /* Si l'usine n'est pas trouvée, retourner -1 */
     if (!usine_trouvee) {
         fclose(fp);
         FILE *sortie = fopen(fichier_sortie, "w");
@@ -353,19 +353,19 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     
-    // Phase 2: Construction de l'arbre de distribution 
+    /* Phase 2: Construction de l'arbre de distribution */
     rewind(fp);
     
     while (fgets(ligne, sizeof(ligne), fp)) {
         analyserLigneCSV(ligne, col1, col2, col3, col4, col5);
         
-        // USINE → STOCKAGE
+        /* USINE ? STOCKAGE */
         if (strcmp(col1, "-") == 0 && strcmp(col2, id_usine) == 0 && strcmp(col3, "-") != 0 && strcmp(col5, "-") != 0) {
             double pourcentage_fuite = atof(col5);
             Noeud *noeud_stockage = creerNoeud(col3, pourcentage_fuite);
             
             if (noeud_stockage) {
-                // Ajouter à la liste des racines 
+                /* Ajouter à la liste des racines */
                 if (nb_stockages >= capacite_stockages) {
                     int nouvelle_capacite = capacite_stockages == 0 ? 4 : capacite_stockages * 2;
                     Noeud **nouvelles_racines = (Noeud **)realloc(racines_stockage, nouvelle_capacite * sizeof(Noeud *));
@@ -376,11 +376,11 @@ int main(int argc, char *argv[]) {
                 }
                 racines_stockage[nb_stockages++] = noeud_stockage;
                 
-                // Ajouter à l'AVL 
+                /* Ajouter à l'AVL */
                 racine_avl = insererAVL(racine_avl, col3, noeud_stockage);
             }
         }
-        // STOCKAGE → JONCTION, JONCTION → RACCORDEMENT, RACCORDEMENT → USAGER 
+        /* STOCKAGE ? JONCTION, JONCTION ? RACCORDEMENT, RACCORDEMENT ? USAGER */
         else if (strcmp(col1, id_usine) == 0 && strcmp(col2, "-") != 0 && strcmp(col3, "-") != 0 && strcmp(col5, "-") != 0) {
             double pourcentage_fuite = atof(col5);
             
@@ -400,21 +400,21 @@ int main(int argc, char *argv[]) {
     
     fclose(fp);
     
-    // Phase 3: Calcul des volumes dans l'arbre 
+    /* Phase 3: Calcul des volumes dans l'arbre */
     for (int i = 0; i < nb_stockages; i++) {
         calculerVolumes(racines_stockage[i], volume_traite_total, nb_stockages);
     }
     
-    // Phase 4: Calcul du total des fuites 
+    /* Phase 4: Calcul du total des fuites */
     double fuites_totales = 0.0;
     for (int i = 0; i < nb_stockages; i++) {
         fuites_totales += calculerFuitesTotales(racines_stockage[i]);
     }
     
-    // Conversion en M.m³ (millions de m³) 
+    /* Conversion en M.m³ (millions de m³) */
     double fuites_totales_Mm3 = fuites_totales / 1000.0;
     
-    // Phase 5: Écriture du résultat 
+    /* Phase 5: Écriture du résultat */
     FILE *sortie = fopen(fichier_sortie, "w");
     if (!sortie) {
         fprintf(stderr, "Erreur: Impossible de créer le fichier %s\n", fichier_sortie);
@@ -431,7 +431,7 @@ int main(int argc, char *argv[]) {
     fprintf(sortie, "%s;%.6f\n", id_usine, fuites_totales_Mm3);
     fclose(sortie);
     
-    // Libération de la mémoire 
+    /* Libération de la mémoire */
     for (int i = 0; i < nb_stockages; i++) {
         libererArbre(racines_stockage[i]);
     }
