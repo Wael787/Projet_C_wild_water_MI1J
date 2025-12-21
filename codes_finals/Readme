@@ -31,7 +31,7 @@ Comment executer notre programme ?
     ./MyScript.sh c-wildwater_v3.dat histo srcC    # Volume capté (C/AVL)
     ./MyScript.sh c-wildwater_v3.dat histo reelC   # Volume traité (C/AVL)
   
-  CALCUL DES FUITES (unité : M.m^3.an^-1) :
+  CALCUL DES FUITES (unité : M.m^3.an^-1) : on a choisi de partir du volume max traité par l'usine et non du volume réellement traité (en prenant en compte les fuites de la source à l'usine)
     ./MyScript.sh c-wildwater_v3.dat leaks
     
     Tester une usine précise :
