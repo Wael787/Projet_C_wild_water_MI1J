@@ -23,11 +23,11 @@ Comment executer notre programme ?
   HISTOGRAMMES (unité : k.m³.an⁻¹) :
     ./MyScript.sh c-wildwater_v3.dat histo max     # Capacité maximale (Shell/AWK)
     ./MyScript.sh c-wildwater_v3.dat histo src     # Volume capté (Shell/AWK)
-    ./MyScript.sh c-wildwater_v3.dat histo real    # Volume traité (Shell/AWK)
+    ./MyScript.sh c-wildwater_v3.dat histo reel    # Volume traité (Shell/AWK)
     
     ./MyScript.sh c-wildwater_v3.dat histo maxC    # Capacité maximale (C/AVL)
     ./MyScript.sh c-wildwater_v3.dat histo srcC    # Volume capté (C/AVL)
-    ./MyScript.sh c-wildwater_v3.dat histo realC   # Volume traité (C/AVL)
+    ./MyScript.sh c-wildwater_v3.dat histo reelC   # Volume traité (C/AVL)
   
   CALCUL DES FUITES (unité : M.m³.an⁻¹) :
     ./MyScript.sh c-wildwater_v3.dat leaks
