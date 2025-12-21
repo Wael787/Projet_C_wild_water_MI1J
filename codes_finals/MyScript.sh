@@ -1,5 +1,6 @@
 #!/bin/bash
 # version finale
+#date : 21/12/2025
 
 
 # Vérification des Paramètres
