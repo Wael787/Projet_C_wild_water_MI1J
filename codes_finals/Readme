@@ -21,12 +21,16 @@ Comment executer notre programme ?
     make clean        # Nettoie les binaires
 
   HISTOGRAMMES (unité : k.m³.an⁻¹) :
-    ./MyScript.sh c-wildwater_v3.dat histo max     # Capacité maximale 
-    ./MyScript.sh c-wildwater_v3.dat histo src     # Volume capté 
-    ./MyScript.sh c-wildwater_v3.dat histo real    # Volume traité
-
+    ./MyScript.sh c-wildwater_v3.dat histo max     # Capacité maximale (Shell/AWK)
+    ./MyScript.sh c-wildwater_v3.dat histo src     # Volume capté (Shell/AWK)
+    ./MyScript.sh c-wildwater_v3.dat histo real    # Volume traité (Shell/AWK)
+    
+    ./MyScript.sh c-wildwater_v3.dat histo maxC    # Capacité maximale (C/AVL)
+    ./MyScript.sh c-wildwater_v3.dat histo srcC    # Volume capté (C/AVL)
+    ./MyScript.sh c-wildwater_v3.dat histo reelC   # Volume traité (C/AVL)
+  
   CALCUL DES FUITES (unité : M.m³.year⁻¹) :
-    ./MyScript.sh c-wildwater_v3.dat leaks 
+    ./MyScript.sh c-wildwater_v3.dat leaks
     
     Tester une usine précise :
     ./wildwater leak c-wildwater_v3.dat "ID_USINE"
